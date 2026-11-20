@@ -1,4 +1,17 @@
 services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: agtech
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: agtech
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agtech -d agtech"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   backend:
     build: .
     ports:
@@ -6,4 +19,11 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL using postgres as host in Docker}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "python -m alembic upgrade head && exec uvicorn src.main:app --host 0.0.0.0 --port 8000"]
     restart: unless-stopped
+volumes:
+  postgres_data:

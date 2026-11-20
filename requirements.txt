@@ -6,3 +6,7 @@ python-dotenv>=1.0.0
 ruff>=0.8.0
 pytest>=8.0.0
 httpx>=0.28.0
+sqlalchemy>=2.0,<2.1
+psycopg[binary]>=3.2,<4
+alembic>=1.14,<2
+pwdlib[argon2]>=0.3,<1
