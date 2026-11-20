@@ -92,11 +92,18 @@ async def csv_body(request: Request) -> bytes:
 @router.post('/admin/price-series/{series_id}/imports', status_code=201)
 def import_prices(series_id: int, raw: Annotated[bytes, Depends(csv_body)], db: DB, admin: Administrator,
                   filename: str = Query(default='prices.csv', min_length=1, max_length=200)):
+    record = record_price_import(series_id, raw, db, admin.id, filename)
+    db.commit()
+    return import_data(record, db)
+
+
+def record_price_import(series_id: int, raw: bytes, db, user_id: int, filename: str) -> PriceImport:
+    """Stage an immutable import in the caller's transaction (manual or collector job)."""
     series = db.scalar(select(PriceSeries).where(PriceSeries.id == series_id).with_for_update())
     if not series:
         raise HTTPException(404, 'Price series not found')
     counts = {'valid': 0, 'error': 0, 'duplicate': 0, 'conflict': 0}
-    record = PriceImport(series_id=series_id, user_id=admin.id, created_at=datetime.now(UTC), filename=filename,
+    record = PriceImport(series_id=series_id, user_id=user_id, created_at=datetime.now(UTC), filename=filename,
                          sha256=hashlib.sha256(raw).hexdigest(), original=raw, counts=dict(counts), rows=[])
     db.add(record)
     db.flush()
@@ -137,8 +144,7 @@ def import_prices(series_id: int, raw: Annotated[bytes, Depends(csv_body)], db: 
         rows.append({'line': 1, 'status': 'error', 'errors': [str(exc)]})
     record.counts = dict(counts)
     record.rows = rows
-    db.commit()
-    return import_data(record, db)
+    return record
 
 
 @router.get('/admin/imports/{import_id}')

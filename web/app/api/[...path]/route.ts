@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 // Same-origin server proxy: session cookies never need to be read by browser JavaScript.
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const path = (await context.params).path.join("/");
-  if (!/^(auth\/(login|logout|me)|admin\/users(?:\/\d+)?|price-series(?:\/\d+\/history)?|admin\/price-series(?:\/\d+\/imports)?|admin\/imports\/\d+(?:\/file)?)$/.test(path)) {
+  if (!/^(auth\/(login|logout|me)|admin\/users(?:\/\d+)?|price-series(?:\/\d+\/history)?|admin\/price-series(?:\/\d+\/imports)?|admin\/imports\/\d+(?:\/file)?|admin\/collector-sources(?:\/\d+(?:\/runs)?)?|admin\/collector-jobs(?:\/\d+(?:\/raw)?)?)$/.test(path)) {
     return Response.json({ detail: "Not found" }, { status: 404 });
   }
   const origin = request.headers.get("origin");
