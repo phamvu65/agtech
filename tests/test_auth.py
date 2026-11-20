@@ -25,12 +25,12 @@ def auth_client(monkeypatch):
     scoped = make_url(url).update_query_dict({"options": f"-csearch_path={schema}"}).render_as_string(hide_password=False)
     monkeypatch.setenv("DATABASE_URL", scoped)
     monkeypatch.setenv("APP_ENV", "test")
-    subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], check=True, capture_output=True)
-    subprocess.run(
-        [sys.executable, "-m", "src.manage", "create-admin", "--username", "admin", "--password-stdin"],
-        input="Local-test-admin-2026!\n", text=True, check=True, capture_output=True,
-    )
     try:
+        subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], check=True, capture_output=True)
+        subprocess.run(
+            [sys.executable, "-m", "src.manage", "create-admin", "--username", "admin", "--password-stdin"],
+            input="Local-test-admin-2026!\n", text=True, check=True, capture_output=True,
+        )
         with TestClient(create_app(Settings(_env_file=None, database_url=scoped, app_env="test"))) as client:
             yield client
     finally:
