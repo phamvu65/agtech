@@ -1,7 +1,7 @@
 from alembic import context
 from sqlalchemy import create_engine
 
-from src import collector_models, price_models, references  # noqa: F401
+from src import analysis, collector_models, price_models, references  # noqa: F401
 from src.config import Settings
 from src.database import Base
 
