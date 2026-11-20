@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 
 type Identity = { username: string; role: "admin" | "observer" };
 type Account = Identity & { id: number; active: boolean };
+type AccountPage = { items: Account[]; total: number };
 
 async function api<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const response = await fetch(`/api/${path}`, { method, headers: { "Content-Type": "application/json" },
@@ -22,6 +23,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountOffset, setAccountOffset] = useState(0);
+  const [accountTotal, setAccountTotal] = useState(0);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState("");
@@ -29,10 +32,13 @@ export default function Home() {
   const refresh = useCallback(async () => {
     try {
       const identity = await api<Identity>("auth/me"); setUser(identity);
-      if (identity.role === "admin") setAccounts(await api<Account[]>("admin/users"));
+      if (identity.role === "admin") {
+        const page = await api<AccountPage>(`admin/users?offset=${accountOffset}&limit=50`);
+        setAccounts(page.items); setAccountTotal(page.total);
+      }
     } catch (err) { setError((err as Error).message); setUser(null); }
     finally { setLoading(false); }
-  }, []);
+  }, [accountOffset]);
   useEffect(() => { void refresh(); }, [refresh]);
 
   async function login(event: FormEvent<HTMLFormElement>) {
@@ -86,7 +92,9 @@ export default function Home() {
               <label>Mật khẩu tạm<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required/></label><small>Từ 12 ký tự. Bàn giao qua kênh riêng.</small>
               <button disabled={busy}>Tạo tài khoản</button>{notice && <p role="status">{notice}</p>}</form>
               <div className="panel accounts"><h3>Danh sách tài khoản</h3><ul>{accounts.map(account => <li key={account.id}><div><strong>{account.username}</strong><small>{account.role === "admin" ? "Quản trị viên" : "Cán bộ hợp tác xã"} · {account.active ? "Đang hoạt động" : "Đã khóa"}</small></div>
-                {account.username !== user.username && <button className="quiet" disabled={busy} onClick={() => toggle(account)}>{account.active ? "Khóa" : "Mở khóa"}</button>}</li>)}</ul></div></div></section>}
+                {account.username !== user.username && <button className="quiet" disabled={busy} onClick={() => toggle(account)}>{account.active ? "Khóa" : "Mở khóa"}</button>}</li>)}</ul>
+                <div className="toolbar"><small>{accountOffset + 1}–{accountOffset + accounts.length} / {accountTotal}</small><button className="quiet" disabled={accountOffset === 0 || busy} onClick={() => setAccountOffset(Math.max(0, accountOffset - 50))}>Trước</button><button className="quiet" disabled={accountOffset + 50 >= accountTotal || busy} onClick={() => setAccountOffset(accountOffset + 50)}>Sau</button></div>
+              </div></div></section>}
         </>}
     </main><footer><span>AGTECH-01 · NÔNG NGHIỆP SỐ</span><span>Dự báo là thông tin tham khảo cho quyết định của bạn.</span></footer>
   </div>;

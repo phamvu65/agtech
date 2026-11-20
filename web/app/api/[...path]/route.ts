@@ -23,7 +23,8 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
         catch { return Response.json({ detail: "Invalid JSON" }, { status: 400 }); }
       }
     }
-    const upstream = await fetch(`${process.env.API_BASE_URL || "http://127.0.0.1:8000"}/${path}`, {
+    const query = path === "admin/users" ? request.nextUrl.search : "";
+    const upstream = await fetch(`${process.env.API_BASE_URL || "http://127.0.0.1:8000"}/${path}${query}`, {
       method: request.method, headers, body: body || undefined, cache: "no-store", signal: AbortSignal.timeout(10000),
     });
     const output = new Headers({ "Cache-Control": "no-store" });

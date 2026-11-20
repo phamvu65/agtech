@@ -3,10 +3,10 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pwdlib import PasswordHash
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -72,7 +72,7 @@ def identity(user: User):
 @router.post("/auth/login")
 def login(body: Login, request: Request, response: Response, db: DB):
     check_origin(request)
-    user = db.scalar(select(User).where(User.username == body.username.strip().lower()))
+    user = db.scalar(select(User).where(User.username == body.username.strip().lower()).with_for_update())
     verified = passwords.verify(body.password, user.password_hash if user else DUMMY_HASH)
     if not user or not verified or not user.active:
         raise HTTPException(401, "Invalid username or password")
@@ -96,11 +96,13 @@ def me(user: Authenticated, response: Response):
 
 
 @router.post("/auth/logout", status_code=204)
-def logout(request: Request, response: Response, db: DB, user: Authenticated):
-    token, _ = token_from(request)
-    stored = db.get(UserSession, hashlib.sha256(token.encode()).hexdigest())
-    db.delete(stored)
-    db.commit()
+def logout(request: Request, response: Response, db: DB):
+    token, cookie = token_from(request)
+    if cookie:
+        check_origin(request, required=True)
+    if token:
+        db.execute(delete(UserSession).where(UserSession.token_hash == hashlib.sha256(token.encode()).hexdigest()))
+        db.commit()
     response.delete_cookie("agtech_session")
 
 
@@ -119,8 +121,10 @@ def account(user: User):
 
 
 @router.get("/admin/users")
-def list_users(db: DB, admin: Administrator):
-    return [account(user) for user in db.scalars(select(User).order_by(User.id).limit(200))]
+def list_users(db: DB, admin: Administrator, offset: int = Query(default=0, ge=0),
+               limit: int = Query(default=50, ge=1, le=100)):
+    return {"items": [account(user) for user in db.scalars(select(User).order_by(User.id).offset(offset).limit(limit))],
+            "total": db.scalar(select(func.count()).select_from(User)), "offset": offset, "limit": limit}
 
 
 @router.post("/admin/users", status_code=201)
@@ -139,7 +143,7 @@ def create_user(body: NewUser, db: DB, admin: Administrator):
 def update_user(user_id: int, body: UserStatus, db: DB, admin: Administrator):
     if user_id == admin.id and not body.active:
         raise HTTPException(409, "Cannot disable your own administrator account")
-    user = db.get(User, user_id)
+    user = db.scalar(select(User).where(User.id == user_id).with_for_update())
     if not user:
         raise HTTPException(404, "User not found")
     user.active = body.active

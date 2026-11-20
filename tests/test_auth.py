@@ -63,6 +63,10 @@ def test_only_admin_manages_accounts_and_disabling_revokes_access(auth_client):
     assert response.status_code == 201
     user_id = response.json()["id"]
     assert "password" not in response.text
+    page = client.get("/admin/users?offset=1&limit=1").json()
+    assert page["total"] == 2
+    assert [item["username"] for item in page["items"]] == ["reader"]
+    assert client.get("/admin/users?offset=-1").status_code == 422
     assert client.post("/admin/users", json=credentials, headers=origin).status_code == 409
     observer = client.post("/auth/login", json={**credentials, "transport": "bearer"}).json()["access_token"]
     bearer = {"Authorization": f"Bearer {observer}"}
@@ -82,3 +86,22 @@ def test_credentials_and_cross_origin_requests_are_rejected(auth_client):
     assert client.post("/auth/login", json={"username": "admin", "password": "Local-test-admin-2026!"},
                        headers={"Origin": "https://untrusted.example"}).status_code == 403
     assert client.get("/auth/me", headers={"Authorization": "Bearer invalid"}).status_code == 401
+
+
+def test_expired_session_is_rejected_and_can_still_logout(auth_client):
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import update
+    from sqlalchemy.orm import Session
+
+    from src.database import UserSession
+
+    client = auth_client
+    client.post("/auth/login", json={"username": "admin", "password": "Local-test-admin-2026!"})
+    # Arrange elapsed server time in the test fixture; assertions remain at the public API.
+    with Session(client.app.state.engine) as db:
+        db.execute(update(UserSession).values(expires_at=datetime.now(UTC) - timedelta(seconds=1)))
+        db.commit()
+    assert client.get("/auth/me").status_code == 401
+    assert client.post("/auth/logout", headers={"Origin": "http://localhost:3000"}).status_code == 204
+    assert not client.cookies.get("agtech_session")

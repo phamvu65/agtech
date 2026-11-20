@@ -26,7 +26,7 @@ Production dùng HTTPS, APP_ENV=production và origin cụ thể. Rate limiting 
 
 Compose có PostgreSQL và volume riêng. Đặt POSTGRES_PASSWORD và DATABASE_URL với host postgres cùng password tương ứng; không dùng localhost làm DB host bên trong container. Backend chạy migration trước Uvicorn. Web hiện chạy Node riêng.
 
-Cluster data/test-postgres ở localhost:55432 trong phiên triển khai chỉ phục vụ test và bị gitignore. Trust authentication ở cluster này không phải cấu hình production; Compose dùng password riêng.
+Cluster data/test-postgres ở localhost:55433 trong phiên triển khai chỉ phục vụ test và bị gitignore. Trust authentication ở cluster này không phải cấu hình production; Compose dùng password riêng.
 
 ## Kiểm thử
 
