@@ -6,7 +6,7 @@ test("admin logs in, provisions and disables an observer, then logs out", async 
   await page.getByLabel("Mật khẩu", { exact: true }).fill(process.env.E2E_PASSWORD!);
   await page.getByRole("button", { name: "Đăng nhập →" }).click();
   await expect(page.getByRole("heading", { name: "Tổng quan thị trường" })).toBeVisible();
-  await expect(page.getByText("Chưa có dữ liệu giá đã kiểm chứng.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Lịch sử giá", exact: true })).toBeVisible();
   await page.getByLabel("Tên đăng nhập mới").fill("reader-e2e");
   await page.getByLabel("Mật khẩu tạm").fill("Temporary-observer-2026!");
   await page.getByRole("button", { name: "Tạo tài khoản", exact: true }).click();

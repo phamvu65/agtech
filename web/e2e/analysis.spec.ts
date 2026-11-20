@@ -104,6 +104,6 @@ test("fixture analysis, risk transitions and private read state integrate on web
     }),
   ).toBeVisible();
   await expect(
-    page.getByText(/Phương pháp: observed_change_pct_v1/),
+    page.getByText(/Phương pháp: observed_change_pct_v1/).first(),
   ).toBeVisible();
 });
