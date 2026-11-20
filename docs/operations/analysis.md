@@ -31,4 +31,4 @@ $env:PLAYWRIGHT_CHANNEL='msedge'
 .venv/Scripts/python.exe scripts/run_web_e2e.py -- analysis.spec.ts
 ```
 
-Chín ca API đã đạt trên PostgreSQL test riêng. Hành trình web tích hợp đã đạt trước bổ sung diagnostics; chạy lại toàn bộ khi bàn giao. Nghiệm thu nguồn thật, đóng băng tiêu chí trước test chính thức và quy tắc khôi phục vẫn còn mở tại #10–#13.
+Chín ca API đã đạt trên PostgreSQL test riêng. Hành trình web tích hợp đã đạt cả diagnostics, lịch sử, căn cứ bất thường và bảng sai số theo horizon. Toàn bộ 34 ca backend đạt; 5 ca dự báo/rủi ro đạt lại sau bổ sung evidence. Nghiệm thu nguồn thật, đóng băng tiêu chí trước test chính thức và quy tắc khôi phục vẫn còn mở tại #10–#13.
