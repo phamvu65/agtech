@@ -246,3 +246,149 @@ def risk_history(
             )
         ]
     }
+
+
+class RiskValidationRun(Base):
+    __tablename__ = "risk_validation_runs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    backtest_id: Mapped[int] = mapped_column(ForeignKey("backtest_runs.id"))
+    policy_id: Mapped[int] = mapped_column(ForeignKey("risk_policies.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    report: Mapped[dict] = mapped_column(JSON)
+
+
+class RiskValidationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    backtest_id: int
+    policy_id: int
+
+
+def risk_diagnostics(rows, artifact, config, start, end):
+    from src.analysis import end_of_day, predict
+
+    truth = {date.fromisoformat(row["observed_on"]): Decimal(row["price"]) for row in rows}
+    expected = scored = incomplete = false_alarm = miss = 0
+    lead = []
+    confusion = {level: {actual: 0 for actual in ["LOW", "MEDIUM", "HIGH"]} for level in ["LOW", "MEDIUM", "HIGH"]}
+    t1, t2 = Decimal(config["t1"]), Decimal(config["t2"])
+
+    def level(drop):
+        return "LOW" if drop < t1 else "MEDIUM" if drop < t2 else "HIGH"
+
+    for offset in range((end - start).days + 1):
+        origin = start + timedelta(days=offset)
+        if origin + timedelta(days=7) > end:
+            continue
+        expected += 1
+        days = [origin + timedelta(days=h) for h in range(1, 8)]
+        if any(day not in truth for day in days):
+            incomplete += 1
+            continue
+        known = [row for row in rows if available(row, end_of_day(origin))]
+        if not known:
+            continue
+        p0 = Decimal(known[-1]["price"])
+        predictions = [predict(artifact, day) for day in days]
+        if any(value <= 0 for value in predictions):
+            continue
+        predicted = max(Decimal(0), (p0 - min(predictions)) / p0 * 100)
+        actual = max(Decimal(0), (p0 - min(truth[day] for day in days)) / p0 * 100)
+        predicted_level, actual_level = level(predicted), level(actual)
+        confusion[predicted_level][actual_level] += 1
+        scored += 1
+        predicted_alarm = predicted >= t1
+        actual_alarm = actual >= t1
+        false_alarm += int(predicted_alarm and not actual_alarm)
+        miss += int(not predicted_alarm and actual_alarm)
+        if predicted_alarm and actual_alarm:
+            lead.append(next(h for h, day in enumerate(days, start=1) if (p0 - truth[day]) / p0 * 100 >= t1))
+    return {
+        "expected_origins": expected,
+        "scored_count": scored,
+        "incomplete_ground_truth": incomplete,
+        "coverage": scored / expected if expected else None,
+        "false_alarm": false_alarm,
+        "miss": miss,
+        "lead_time_days": lead,
+        "confusion": confusion,
+    }
+
+
+@router.post("/admin/risk-validation", status_code=201)
+def validate_risk(body: RiskValidationRequest, db: DB, admin: Administrator, request: Request):
+    from src.analysis import BacktestRun
+
+    report = db.get(BacktestRun, body.backtest_id)
+    policy = db.get(RiskPolicy, body.policy_id)
+    if not report or not policy:
+        raise HTTPException(404, "Backtest/policy not found")
+    snapshot = db.get(DataSnapshot, report.snapshot_id)
+    if (
+        report.status != "fixture_evaluated"
+        or snapshot.series_id != policy.series_id
+        or request.app.state.settings.app_env == "production"
+    ):
+        raise HTTPException(409, "Risk diagnostic requires matching fixture backtest/policy outside production")
+    config = report.config
+    rows = snapshot.payload["observations"]
+    result = {
+        "mode": "fixture",
+        "snapshot_sha256": snapshot.sha256,
+        "policy_sha256": policy.sha256,
+        "formal_test_gate": "blocked_unverified_data_and_operational_criteria",
+        "validation": risk_diagnostics(
+            rows,
+            report.artifact,
+            policy.config,
+            date.fromisoformat(config["train_end"]) + timedelta(days=1),
+            date.fromisoformat(config["validation_end"]),
+        ),
+        "test": risk_diagnostics(
+            rows,
+            report.artifact,
+            policy.config,
+            date.fromisoformat(config["validation_end"]) + timedelta(days=1),
+            date.fromisoformat(config["test_end"]),
+        ),
+    }
+    run = RiskValidationRun(backtest_id=report.id, policy_id=policy.id, created_at=datetime.now(UTC), report=result)
+    db.add(run)
+    db.commit()
+    return {
+        "id": run.id,
+        "backtest_id": run.backtest_id,
+        "policy_id": run.policy_id,
+        "report": run.report,
+        "operational_eligible": False,
+    }
+
+
+@router.get("/admin/risk-policies/{policy_id}")
+def get_policy(policy_id: int, db: DB, admin: Administrator):
+    policy = db.get(RiskPolicy, policy_id)
+    if not policy:
+        raise HTTPException(404, "Risk policy not found")
+    return {
+        "id": policy.id,
+        "series_id": policy.series_id,
+        "version": policy.version,
+        "sha256": policy.sha256,
+        "created_at": policy.created_at.isoformat(),
+        "config": policy.config,
+        "operational_eligible": False,
+    }
+
+
+@router.get("/admin/risk-validation/{run_id}")
+def get_risk_validation(run_id: int, db: DB, admin: Administrator):
+    run = db.get(RiskValidationRun, run_id)
+    if not run:
+        raise HTTPException(404, "Risk validation not found")
+    return {
+        "id": run.id,
+        "backtest_id": run.backtest_id,
+        "policy_id": run.policy_id,
+        "created_at": run.created_at.isoformat(),
+        "report": run.report,
+        "operational_eligible": False,
+    }

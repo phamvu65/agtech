@@ -52,6 +52,8 @@ class BacktestRequest(BaseModel):
 
     @model_validator(mode="after")
     def order(self):
+        if self.test_end > datetime.now(UTC).date():
+            raise ValueError("Backtest must use a historical evaluation period")
         if not self.train_end < self.validation_end < self.test_end:
             raise ValueError("Require train_end < validation_end < test_end")
         if (self.test_end - self.train_end).days > 3660:

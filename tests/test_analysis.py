@@ -4,7 +4,7 @@ from decimal import Decimal
 from tests.test_prices import HEADER, ORIGIN, SERIES, admin
 
 
-def seeded(client, missing_index=None):
+def seeded(client, missing_index=None, falling_after_train=False):
     admin(client)
     series = client.post("/admin/price-series", json={**SERIES, "locality_code": "ANALYSIS"}, headers=ORIGIN).json()
     rows = []
@@ -13,8 +13,9 @@ def seeded(client, missing_index=None):
             continue
         day = date(2025, 1, 1) + timedelta(days=index)
         published = "2025-01-15" if index == 0 else day.isoformat()
+        price = 100090 - 1000 * (index - 9) if falling_after_train and index >= 10 else 100000 + 10 * index
         rows.append(
-            f"{day},{100000 + 10 * index},VND/kg,{published}T08:00:00Z,{published}T09:00:00Z,https://example.com/synthetic/analysis\n"
+            f"{day},{price},VND/kg,{published}T08:00:00Z,{published}T09:00:00Z,https://example.com/synthetic/analysis\n"
         )
     result = client.post(
         f"/admin/price-series/{series['id']}/imports", content=(HEADER + "".join(rows)).encode(), headers=ORIGIN

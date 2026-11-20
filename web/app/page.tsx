@@ -5,6 +5,8 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api } from "./api-client";
 import PriceMarket from "./price-market";
 import CollectorPanel from "./collector-panel";
+import AnalysisLab from "./analysis-lab";
+import PersonalPanel from "./personal-panel";
 
 type Identity = { username: string; role: "admin" | "observer" };
 type Account = Identity & { id: number; active: boolean };
@@ -79,7 +81,8 @@ export default function Home() {
           <div className="toolbar"><h2>Tổng quan thị trường</h2><span className="status">Chưa đủ cơ sở dự báo</span><button className="quiet" onClick={refresh}>Làm mới</button></div>
           {error && <p className="error" role="alert">{error}</p>}
           <PriceMarket isAdmin={user.role === "admin"}/>
-          {user.role === "admin" && <CollectorPanel/>}
+          <PersonalPanel key={user.username}/>
+          {user.role === "admin" && <><CollectorPanel/><AnalysisLab/></>}
           {user.role === "admin" && <section className="admin"><div className="section-title"><span className="eyebrow">QUẢN TRỊ</span><h2>Tài khoản sử dụng</h2></div>
             <div className="admin-grid"><form className="panel" onSubmit={createAccount}><h3>Cấp tài khoản cán bộ</h3>
               <label>Tên đăng nhập mới<input name="username" autoComplete="off" pattern="[a-zA-Z0-9_.\-]+" required maxLength={80}/></label>

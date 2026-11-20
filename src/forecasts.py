@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
@@ -181,7 +181,9 @@ class FixtureForecastRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     snapshot_id: int
     as_of: AwareDatetime
-    prices: list[Decimal] = Field(min_length=7, max_length=7)
+    prices: list[Annotated[Decimal, Field(gt=0, max_digits=14, decimal_places=2, allow_inf_nan=False)]] = Field(
+        min_length=7, max_length=7
+    )
 
     @model_validator(mode="after")
     def validate_values(self):

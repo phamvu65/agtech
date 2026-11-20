@@ -46,3 +46,39 @@ def test_followers_receive_only_risk_changes_and_private_read_state_is_isolated(
     assert client.get("/me/followings").json()["total"] == 1
     assert client.delete(f"/me/followings/{series['id']}", headers=ORIGIN).status_code == 204
     assert client.get("/me/followings").json()["total"] == 0
+
+
+def test_pending_recovery_does_not_invent_restore_notifications(auth_client):
+    client = auth_client
+    series, backtest = evaluated(client)
+    client.post("/me/followings", json={"series_id": series["id"]}, headers=ORIGIN)
+    policy = client.post(
+        f"/admin/price-series/{series['id']}/risk-policies",
+        json={
+            "version": "pending-fixture",
+            "t1": "5",
+            "t2": "10",
+            "freshness_hours": "24",
+            "anomaly_pct": "2",
+            "recovery_mode": "pending",
+        },
+        headers=ORIGIN,
+    ).json()
+    for index, price in enumerate(["95323", None, "90306"]):
+        if price:
+            forecast = client.post(
+                f"/admin/price-series/{series['id']}/forecast-fixture",
+                json={"snapshot_id": backtest["snapshot_id"], "as_of": "2025-02-04T23:59:00Z", "prices": [price] * 7},
+                headers=ORIGIN,
+            ).json()
+        else:
+            forecast = client.post(
+                f"/admin/price-series/{series['id']}/forecasts", json={"as_of": "2025-02-04T23:59:00Z"}, headers=ORIGIN
+            ).json()
+        response = client.post(
+            "/admin/risk-assessments",
+            json={"forecast_id": forecast["id"], "policy_id": policy["id"], "idempotency_key": f"pending-{index}"},
+            headers=ORIGIN,
+        ).json()
+    assert response["notification_decision"] == "recovery_policy_pending"
+    assert client.get("/me/notifications").json()["total"] == 1
