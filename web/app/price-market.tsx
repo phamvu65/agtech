@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "./api-client";
+import ReferencePanel from "./reference-panel";
 
 type Series = {id: number; commodity: string; locality_code: string; locality_name: string; quality: string;
   source_name: string; source_url: string; dataset_kind: "synthetic" | "authorized"; rights_basis: string; unit: string};
@@ -116,6 +117,7 @@ export default function PriceMarket({isAdmin}: {isAdmin: boolean}) {
           <tbody>{history.days.map(day => <tr key={day.observed_on}><td>{day.observed_on}</td><td>{day.price_vnd_per_kg === null ? "Thiếu giá" : price(day.price_vnd_per_kg)}</td>
             <td>{day.price_vnd_per_kg === null ? "—" : timestamp(day.published_at)}</td><td>{day.price_vnd_per_kg === null ? "—" : timestamp(day.collected_at)}</td>
             <td>{day.source_document_url && <><a href={day.source_document_url} target="_blank" rel="noreferrer">Tài liệu nguồn</a> · #{day.import_id}</>}</td></tr>)}</tbody></table></div>
+        <ReferencePanel seriesId={history.series.id} start={history.days[0].observed_on} end={history.days[history.days.length-1].observed_on} demo={history.series.dataset_kind === "synthetic"} admin={isAdmin}/>
       </>}
     </div>}
     {isAdmin && <div className="admin-grid price-admin">
