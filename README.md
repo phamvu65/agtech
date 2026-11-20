@@ -4,7 +4,7 @@ Nền tảng theo dõi thị trường nông sản, dự báo giá và hỗ tr�
 
 ## Trạng thái
 
-Repository hiện có backend FastAPI tối thiểu với `/health`, kiểm thử và cấu hình Docker/CI. Các chức năng dữ liệu, dự báo, tài khoản, web và app chưa được triển khai.
+Repository có nền FastAPI/PostgreSQL, đăng nhập/phân quyền và web Next.js cấp/khóa tài khoản. Dữ liệu thị trường, dự báo và app native chưa triển khai. Xem [hướng dẫn chạy và kiểm thử](docs/operations/authentication.md).
 
 ## Tài liệu
 
@@ -25,7 +25,7 @@ python -m pip install -r requirements.txt
 python -m uvicorn src.main:app --reload
 ```
 
-Có thể sao chép `.env.example` thành `.env` để tùy chỉnh. Kiểm tra `http://localhost:8000/health`, tài liệu API tại `/docs`. Backend hiện không cần API key hoặc kết nối database. PostgreSQL là mục tiêu thiết kế, chưa tích hợp.
+Có thể sao chép `.env.example` thành `.env` để tùy chỉnh. Kiểm tra `http://localhost:8000/health`, tài liệu API tại `/docs`. `/health` không yêu cầu database; đăng nhập cần PostgreSQL và migration. Không cần API key LLM.
 
 ```sh
 python -m ruff check src tests

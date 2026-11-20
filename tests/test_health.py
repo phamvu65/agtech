@@ -14,7 +14,8 @@ def test_chatbot_routes_are_not_exposed():
     with TestClient(app) as client:
         assert client.post("/api/v1/chat", json={"message": "hello"}).status_code == 404
         schema = client.get("/openapi.json").json()
-        assert set(schema["paths"]) == {"/health"}
+        assert "/health" in schema["paths"]
+        assert not any("chat" in path for path in schema["paths"])
 
 
 def test_allowed_web_origin():

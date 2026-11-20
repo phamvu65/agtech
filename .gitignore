@@ -59,3 +59,6 @@ out/
 .pytest_cache/
 .ruff_cache/
 .expo/
+*.tsbuildinfo
+web/test-results/
+web/playwright-report/
