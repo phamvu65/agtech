@@ -198,6 +198,10 @@ def create_assessment(body: AssessmentRequest, db: DB, admin: Administrator, req
         payload=payload,
     )
     db.add(record)
+    db.flush()
+    from src.personal import publish_notifications
+
+    publish_notifications(db, record, policy)
     db.commit()
     return assessment_data(record)
 
