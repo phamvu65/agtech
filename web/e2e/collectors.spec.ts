@@ -44,3 +44,39 @@ test('admin runs fixture jobs and sees blocked real sources with durable executi
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({path:'test-results/collector-jobs-mobile-web.png', fullPage:true});
 });
+
+test('older collector refresh cannot replace a newly queued job', async ({page}) => {
+  await page.goto('/');
+  await page.getByLabel('Tên đăng nhập', {exact:true}).fill('admin-e2e');
+  await page.getByLabel('Mật khẩu', {exact:true}).fill(process.env.E2E_PASSWORD!);
+  await page.getByRole('button', {name:'Đăng nhập →'}).click();
+  await expect(page.getByRole('heading', {name:'Thu thập theo lịch'})).toBeVisible();
+  const created = await page.request.post('/api/admin/price-series', {headers:{Origin:'http://localhost:3001'}, data:{
+    commodity:'Cà phê refresh fixture', locality_code:'TEST-REFRESH', locality_name:'Địa bàn refresh', quality:'unspecified',
+    source_name:'Fixture refresh', source_url:'https://example.com/refresh', dataset_kind:'synthetic',
+    rights_basis:'Tự tạo để kiểm thử refresh tác vụ'}});
+  expect(created.status()).toBe(201);
+  const source = await page.request.post('/api/admin/collector-sources', {headers:{Origin:'http://localhost:3001'},
+    data:{series_id:(await created.json()).id, connector:'fixture_csv'}});
+  expect(source.status()).toBe(201);
+  await page.getByRole('button', {name:'Tải lại tác vụ'}).click();
+  const card = page.getByTestId('collector-source').filter({hasText:'Địa bàn refresh'});
+  await expect(card).toBeVisible();
+  let release!: () => void;
+  const gate = new Promise<void>(resolve=>{release=resolve;});
+  let requestStarted!: () => void;
+  const started = new Promise<void>(resolve=>{requestStarted=resolve;});
+  let first = true;
+  await page.route('**/api/admin/collector-jobs?*', async route=>{
+    const response = await route.fetch();
+    if(first) {first=false; requestStarted(); await gate;}
+    await route.fulfill({response});
+  });
+  await page.getByRole('button', {name:'Tải lại tác vụ'}).click(); await started;
+  await card.getByRole('button', {name:'Chạy ngay'}).click();
+  await expect(page.getByTestId('collector-job').first()).toContainText('Đã xếp hàng');
+  const olderResponse = page.waitForResponse(response=>response.url().includes('/api/admin/collector-jobs?'));
+  release(); await olderResponse;
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId('collector-job').first()).toContainText('Đã xếp hàng');
+});

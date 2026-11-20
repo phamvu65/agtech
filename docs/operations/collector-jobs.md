@@ -13,7 +13,7 @@ python -m src.worker --once
 python -m src.worker --poll-seconds 5
 ```
 
-Worker cần DATABASE_URL cùng database/schema backend; không có API công khai để bật tiến trình worker từ trình duyệt. Nút Chạy ngay chỉ xếp hàng; chỉ khi worker xác nhận mới hiển thị kết quả. Giao diện có tải lại, phân trang, chi tiết các mốc, sự kiện, lỗi, số dòng và tải phản hồi gốc/CSV chuẩn hóa.
+Worker cần DATABASE_URL cùng database/schema backend; không có API công khai để bật tiến trình worker từ trình duyệt. Nút Chạy ngay chỉ xếp hàng; chỉ khi worker xác nhận mới hiển thị kết quả. Giao diện có tải lại, phân trang, chi tiết các mốc, sự kiện, lỗi, số dòng và tải phản hồi gốc/CSV chuẩn hóa. Chỉ phản hồi tải mới nhất được áp dụng; phản hồi chậm của lượt trước không thay danh sách mới. Hiển thị thời điểm tải thành công gần nhất; nếu mất kết nối, dữ liệu giữ lại được ghi rõ là từ lần tải cũ.
 
 Lịch mặc định tắt. Bật lịch đặt lần đến hạn đầu tiên là thời điểm lưu cấu hình; chu kỳ cho phép 60–604800 giây (giới hạn vận hành, không phải ngưỡng dữ liệu/AI). Mỗi lần đã xếp lịch, lần kế tiếp tính từ thời điểm scheduler kiểm tra cộng chu kỳ; bỏ qua các mốc đã lỡ thay vì tạo hàng loạt tác vụ bù. Tắt lịch không hủy tác vụ đã xếp hàng. Source gate được kiểm cả khi xếp hàng và trước HTTP; nếu môi trường mới chặn nguồn, worker giữ kết quả blocked và không gọi connector.
 

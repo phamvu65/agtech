@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api-client";
 
 type Series = {id:number; commodity:string; locality_name:string; quality:string; source_name:string; dataset_kind:string};
@@ -12,7 +12,7 @@ type Job = {id:number; source_id:number; trigger:string; status:string; error:st
 type Jobs = {items:Job[]; total:number};
 const statusLabel:Record<string,string> = {queued:"Đã xếp hàng", running:"Đang chạy", succeeded:"Thành công", failed:"Thất bại", blocked:"Bị chặn", interrupted:"Bị ngắt"};
 const triggerLabel:Record<string,string> = {manual:"Thủ công", scheduled:"Theo lịch", retry:"Chạy lại"};
-const timestamp = (value:string|null) => value ? new Intl.DateTimeFormat("vi-VN", {dateStyle:"short", timeStyle:"short", timeZone:"Asia/Ho_Chi_Minh"}).format(new Date(value)) : "—";
+const timestamp = (value:string|null) => value ? new Intl.DateTimeFormat("vi-VN", {dateStyle:"short", timeStyle:"medium", timeZone:"Asia/Ho_Chi_Minh"}).format(new Date(value)) : "—";
 
 export default function CollectorPanel() {
   const [sources,setSources] = useState<Source[]>([]);
@@ -24,16 +24,22 @@ export default function CollectorPanel() {
   const [busy,setBusy] = useState(false);
   const [detail,setDetail] = useState<Job|null>(null);
   const [notice,setNotice] = useState("");
+  const [lastLoadedAt,setLastLoadedAt] = useState<string|null>(null);
+  const refreshSequence = useRef(0);
   const refresh = useCallback(async () => {
+    const sequence = ++refreshSequence.current;
     setLoading(true); setError("");
     try {
       const [sourceItems,seriesItems,jobItems] = await Promise.all([
         api<Source[]>("admin/collector-sources"), api<Series[]>("price-series"),
         api<Jobs>(`admin/collector-jobs?offset=${offset}&limit=10`)]);
-      setSources(sourceItems); setSeries(seriesItems); setJobs(jobItems);
-    } catch(err) {setError((err as Error).message);} finally {setLoading(false);}
+      if(sequence !== refreshSequence.current) return;
+      setSources(sourceItems); setSeries(seriesItems); setJobs(jobItems); setLastLoadedAt(new Date().toISOString());
+      setDetail(previous => previous ? jobItems.items.find(job=>job.id === previous.id) || null : null);
+    } catch(err) {if(sequence === refreshSequence.current) setError((err as Error).message);}
+    finally {if(sequence === refreshSequence.current) setLoading(false);}
   },[offset]);
-  useEffect(() => {void refresh();},[refresh]);
+  useEffect(() => {void refresh(); return () => {refreshSequence.current += 1;};},[refresh]);
   async function mutate(action:()=>Promise<unknown>) {
     setBusy(true); setError(""); setNotice("");
     try {await action(); await refresh();} catch(err) {setError((err as Error).message);} finally {setBusy(false);}
@@ -60,6 +66,7 @@ export default function CollectorPanel() {
   return <section className="admin collector-panel" aria-labelledby="collector-title">
     <div className="toolbar"><h2 id="collector-title">Thu thập theo lịch</h2><button className="quiet" onClick={refresh} disabled={busy||loading}>Tải lại tác vụ</button></div>
     <p className="muted">Đang kiểm thử phần mềm bằng fixture HTTP nội bộ. Không gọi nguồn giá thật; đây không phải bằng chứng nguồn hoặc chất lượng dự báo.</p>
+    {lastLoadedAt && <p className="muted">Lần tải thành công: {timestamp(lastLoadedAt)} (UTC+7){error ? ". Dữ liệu cũ của lần tải này vẫn đang hiển thị." : ""}</p>}
     {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status" className="panel">{notice}</p>}
     {loading && <p role="status">Đang tải tác vụ…</p>}
     <form className="panel collector-register" onSubmit={register}><h3>Đăng ký nguồn thu thập</h3>
