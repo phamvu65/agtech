@@ -8,6 +8,7 @@ from src.analysis import router as analysis_router
 from src.auth import router as auth_router
 from src.collectors import router as collectors_router
 from src.config import Settings, get_settings
+from src.forecasts import router as forecasts_router
 from src.prices import router as prices_router
 from src.references import router as references_router
 
@@ -36,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(collectors_router)
     app.include_router(references_router)
     app.include_router(analysis_router)
+    app.include_router(forecasts_router)
 
     @app.get("/health")
     async def health():
