@@ -2,10 +2,10 @@
 
 | Thông tin | Giá trị |
 |---|---|
-| Phiên bản trình bày | 1.1 — 20/11/2026 |
+| Phiên bản trình bày | 1.2 — 20/11/2026 |
 | Issue gốc | https://github.com/phamvu65/agtech/issues/1 |
 | Phạm vi | Q1–Q29 và ranh giới kiểm thử đã xác nhận |
-| Mục đích cập nhật | Đổi cấu trúc trình bày, giữ yêu cầu đã thống nhất |
+| Mục đích cập nhật | Chi tiết hóa story để chia ticket; giữ phạm vi và mã truy vết |
 | Mức sẵn sàng | Có thể bắt đầu kiểm chứng; các ngưỡng dữ liệu/AI chưa chốt |
 
 > **Đã xác nhận** là yêu cầu/định hướng đã chốt. **Đề xuất** là phương án thiết kế. **Cần kiểm chứng** là điểm chưa có đủ bằng chứng để kết luận đạt. Các sơ đồ thể hiện thiết kế mục tiêu.
@@ -72,81 +72,197 @@ Dashboard hiển thị lịch sử, dự báo, cờ bất thường và mức r�
 
 ## 3. User stories theo nhóm chức năng
 
-### Truy cập và giá thị trường
+Phân nhóm dưới đây phục vụ chia ticket. **Mã US-01–US-35 được giữ nguyên**, không đánh lại số khi đổi nhóm. Phần A là chức năng sản phẩm; phần B là yêu cầu xuyên nền tảng, công việc kỹ thuật và bằng chứng bàn giao.
 
-| Mã | User story |
-| --- | --- |
-| US-01 | Là cán bộ hợp tác xã, tôi muốn đăng nhập trên web hoặc app để truy cập thông tin và danh sách theo dõi của mình. |
-| US-02 | Là cán bộ hợp tác xã, tôi muốn xem giá thu mua gần nhất cùng đơn vị và loại hàng để hiểu đúng giá tham khảo. |
-| US-03 | Là cán bộ hợp tác xã, tôi muốn biết địa bàn và chất lượng hàng theo nguồn để tránh so sánh giá không tương đương. |
-| US-04 | Là cán bộ hợp tác xã, tôi muốn xem giá lịch sử theo thời gian để nhận biết diễn biến thị trường. |
-| US-05 | Là cán bộ hợp tác xã, tôi muốn thấy ngày thiếu giá để không nhầm dữ liệu điền thêm là giao dịch thực. |
-| US-06 | Là cán bộ hợp tác xã, tôi muốn thấy nguồn, ngày quan sát và thời điểm cập nhật để đánh giá độ mới của thông tin. |
+| Trường | Cách sử dụng khi chia ticket |
+|---|---|
+| Nhu cầu và giá trị | Xác định hành vi người dùng cần nhận được |
+| FR/NFR | Truy ngược về yêu cầu và tiêu chí hệ thống ở mục 8 |
+| Điều kiện hoàn thành | Cơ sở viết acceptance criteria quan sát được |
+| Phụ thuộc đề xuất | Gợi ý thứ tự; không phải blocking link đã tạo trên tracker |
 
+**Một story không mặc nhiên bằng một ticket.** Có thể gộp các story tạo một hành trình hoàn chỉnh hoặc chia một story thành các lát cắt có thể kiểm tra. Không chia ticket chỉ theo tầng database/API/UI. Phụ thuộc phải được rà soát theo lát cắt thực tế; các triển khai nền tảng có thể dùng chung để tránh vòng phụ thuộc.
 
-### Dự báo, bất thường và rủi ro
+Các điều kiện hoàn thành bên dưới diễn giải phạm vi và FR/NFR hiện có. Các lựa chọn về cấp tài khoản, cơ chế phiên, thông báo khôi phục, thuật toán và ngưỡng vẫn giữ trạng thái đề xuất/chờ kiểm chứng ở mục 4 và 10.
 
-| Mã | User story |
-| --- | --- |
-| US-07 | Là cán bộ hợp tác xã, tôi muốn xem dự báo cho từng ngày trong bảy ngày lịch tới để tham khảo kế hoạch tiêu thụ. |
-| US-08 | Là cán bộ hợp tác xã, tôi muốn biết thời điểm tạo dự báo và dữ liệu được dùng đến ngày nào để tránh sử dụng dự báo cũ như hiện hành. |
-| US-09 | Là cán bộ hợp tác xã, tôi muốn xem sai số lịch sử và giới hạn dự báo để hiểu mức độ tin cậy có căn cứ. |
-| US-10 | Là cán bộ hợp tác xã, tôi muốn thấy trạng thái chưa đủ cơ sở cùng lý do để không hiểu nhầm thiếu dữ liệu thành rủi ro thấp. |
-| US-11 | Là cán bộ hợp tác xã, tôi muốn thấy cờ bất thường trên giá quan sát để chú ý đến điểm cần kiểm tra. |
-| US-12 | Là cán bộ hợp tác xã, tôi muốn phân biệt bất thường dữ liệu với rủi ro giá giảm để diễn giải đúng tín hiệu. |
-| US-13 | Là cán bộ hợp tác xã, tôi muốn xem mức LOW/MEDIUM/HIGH và căn cứ phân loại để tham khảo trước khi quyết định bán. |
+### A1. Tài khoản và quyền
 
+**Loại:** Chức năng sản phẩm. **Vai trò:** Cán bộ hợp tác xã / quản trị viên.
 
-### Theo dõi, lịch sử và thông báo
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-01 | **cán bộ hợp tác xã:** đăng nhập trên web hoặc app | truy cập thông tin và danh sách theo dõi của mình. |
+| US-23 | **quản trị viên:** quản lý tài khoản và quyền truy cập | duy trì đúng vai trò sử dụng. |
 
-| Mã | User story |
-| --- | --- |
-| US-14 | Là cán bộ hợp tác xã, tôi muốn đăng ký hoặc bỏ theo dõi mặt hàng–địa bàn để quản lý thông tin quan tâm. |
-| US-15 | Là cán bộ hợp tác xã, tôi muốn danh sách theo dõi nhất quán trên web và app để tiếp tục công việc giữa các thiết bị. |
-| US-16 | Là cán bộ hợp tác xã, tôi muốn nhận thông báo khi mức rủi ro thay đổi để biết có diễn biến mới. |
-| US-17 | Là cán bộ hợp tác xã, tôi muốn tránh nhận lặp cùng cảnh báo HIGH mỗi ngày để không bỏ qua thông báo hữu ích. |
-| US-18 | Là cán bộ hợp tác xã, tôi muốn xem lịch sử dự báo và đánh giá rủi ro để hiểu thông tin đã thay đổi ra sao. |
-| US-19 | Là cán bộ hợp tác xã, tôi muốn đọc và đánh dấu thông báo trên web/app để quản lý những nội dung đã xem. |
+**Căn cứ chia ticket và nghiệm thu**
 
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-01 | FR-01 | Tài khoản hợp lệ đăng nhập được trên web/app; tài khoản vô hiệu bị chặn; đăng xuất kết thúc phiên. | Hợp đồng danh tính và xác thực |
+| US-23 | FR-01 | Chỉ quản trị viên được quản lý tài khoản; gọi trực tiếp API bằng quyền cán bộ bị từ chối. | US-01; ma trận quyền |
 
-### Mobile và kết nối
+### A2. Theo dõi thị trường
 
-| Mã | User story |
-| --- | --- |
-| US-20 | Là cán bộ hợp tác xã, tôi muốn biết khi mất mạng và có thể thử lại để không nhầm thao tác thất bại là thành công. |
-| US-21 | Là cán bộ hợp tác xã, tôi muốn dữ liệu còn trên màn hình có thời điểm cập nhật để nhận biết dữ liệu cũ. |
-| US-22 | Là cán bộ hợp tác xã, tôi muốn dùng app trên Android hoặc iOS để truy cập bằng điện thoại của mình. |
+**Loại:** Chức năng sản phẩm. **Vai trò:** Cán bộ hợp tác xã.
 
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-02 | xem giá thu mua gần nhất cùng đơn vị và loại hàng | hiểu đúng giá tham khảo. |
+| US-03 | biết địa bàn và chất lượng hàng theo nguồn | tránh so sánh giá không tương đương. |
+| US-04 | xem giá lịch sử theo thời gian | nhận biết diễn biến thị trường. |
+| US-05 | thấy ngày thiếu giá | không nhầm dữ liệu điền thêm là giao dịch thực. |
+| US-06 | thấy nguồn, ngày quan sát và thời điểm cập nhật | đánh giá độ mới của thông tin. |
 
-### Quản trị và chất lượng dữ liệu
+**Căn cứ chia ticket và nghiệm thu**
 
-| Mã | User story |
-| --- | --- |
-| US-23 | Là quản trị viên, tôi muốn quản lý tài khoản và quyền truy cập để duy trì đúng vai trò sử dụng. |
-| US-24 | Là quản trị viên, tôi muốn quản lý nguồn và lịch thu thập để cập nhật dữ liệu phù hợp nhịp công bố. |
-| US-25 | Là quản trị viên, tôi muốn nhập tệp theo mẫu để khởi tạo hoặc bổ sung lịch sử khi cần. |
-| US-26 | Là quản trị viên, tôi muốn xem các dòng hợp lệ, lỗi, trùng và xung đột để kiểm soát dữ liệu nhập. |
-| US-27 | Là quản trị viên, tôi muốn truy vết bản nguồn và thay đổi dữ liệu để kiểm tra sai lệch. |
-| US-28 | Là quản trị viên, tôi muốn chạy lại tác vụ thất bại mà không nhân đôi dữ liệu để khôi phục vận hành. |
-| US-29 | Là quản trị viên, tôi muốn theo dõi trạng thái, thời gian và lỗi từng lần chạy để biết hệ thống đang hoạt động ra sao. |
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-02 | FR-02, FR-06 | Có giá thì hiển thị giá, VNĐ/kg và loại hàng; không có giá thì hiển thị trạng thái rỗng. | US-32; US-24/25 → US-26 |
+| US-03 | FR-02, FR-05 | Mỗi chuỗi gắn địa bàn và chất lượng theo nguồn; không trộn chuỗi không tương đương. | US-32; hợp đồng dữ liệu |
+| US-04 | FR-06 | Lọc khoảng thời gian trả đúng các quan sát và thứ tự ngày; không tạo quan sát giả. | US-02, US-03 |
+| US-05 | FR-05, FR-06 | Ngày thiếu được đánh dấu; biểu đồ không thể hiện giá điền như giá quan sát thật. | US-04, US-26 |
+| US-06 | FR-06, NFR-01, NFR-02 | Hiển thị nguồn, ngày quan sát và thời điểm cập nhật; phân biệt thời điểm công bố/thu thập. | US-02; metadata nguồn |
 
+### A3. Dự báo, bất thường và rủi ro
 
-### Đánh giá và truy vết mô hình
+**Loại:** Chức năng sản phẩm. **Vai trò:** Cán bộ hợp tác xã.
 
-| Mã | User story |
-| --- | --- |
-| US-30 | Là quản trị viên, tôi muốn xem kết quả đánh giá model so với baseline để quyết định model có đủ điều kiện sử dụng. |
-| US-31 | Là quản trị viên, tôi muốn giữ phiên bản model và dữ liệu gắn với dự báo để tái kiểm tra kết quả đã công bố. |
-| US-32 | Là người thực hiện đồ án, tôi muốn kiểm chứng nguồn, lịch sử và quyền sử dụng trước huấn luyện để xác định tính khả thi thực tế. |
-| US-33 | Là người thực hiện đồ án, tôi muốn đánh giá theo thời gian và từng horizon để phát hiện sai số hoặc rò rỉ thông tin tương lai. |
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-07 | xem dự báo cho từng ngày trong bảy ngày lịch tới | tham khảo kế hoạch tiêu thụ. |
+| US-08 | biết thời điểm tạo dự báo và dữ liệu được dùng đến ngày nào | tránh sử dụng dự báo cũ như hiện hành. |
+| US-09 | xem sai số lịch sử và giới hạn dự báo | hiểu mức độ tin cậy có căn cứ. |
+| US-10 | thấy trạng thái chưa đủ cơ sở cùng lý do | không hiểu nhầm thiếu dữ liệu thành rủi ro thấp. |
+| US-11 | thấy cờ bất thường trên giá quan sát | chú ý đến điểm cần kiểm tra. |
+| US-12 | phân biệt bất thường dữ liệu với rủi ro giá giảm | diễn giải đúng tín hiệu. |
+| US-13 | xem mức LOW/MEDIUM/HIGH và căn cứ phân loại | tham khảo trước khi quyết định bán. |
 
+**Căn cứ chia ticket và nghiệm thu**
 
-### Bằng chứng và báo cáo
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-07 | FR-07 | Khi đủ điều kiện trả bảy ngày lịch sau mốc dự báo; thiếu điều kiện không công bố dự báo hợp lệ. | US-30, US-31, US-33; gate dữ liệu/model |
+| US-08 | FR-07, FR-12 | Dự báo có thời điểm tạo, dữ liệu đến ngày nào và phiên bản; kết quả cũ không giả là hiện hành. | US-07, US-31 |
+| US-09 | FR-07, NFR-01 | Có tham chiếu sai số theo horizon, số mẫu và giới hạn; không tự gắn phần trăm tin cậy chưa hiệu chuẩn. | US-30, US-33; D-06 |
+| US-10 | FR-07, FR-09 | Dữ liệu thiếu/quá cũ hoặc model chưa đạt có lý do; không gán LOW thay cho chưa đủ cơ sở. | Gate dữ liệu/model; D-02 |
+| US-11 | FR-08 | Cờ có ngày, giá, phương pháp/phiên bản và căn cứ; kiểm tra mẫu lỗi và biến động thật. | US-04, US-26; chọn phương pháp bất thường |
+| US-12 | FR-08, FR-09 | Bất thường và rủi ro có nhãn riêng; một cờ bất thường không tự chuyển rủi ro thành HIGH. | US-11, US-13 |
+| US-13 | FR-09 | Phân loại theo giá dự báo thấp nhất so với giá mới nhất; kiểm tra sát hai ngưỡng và đầu vào không hợp lệ. | US-07, US-10; D-05 |
 
-| Mã | User story |
-| --- | --- |
-| US-34 | Là người thực hiện đồ án, tôi muốn lưu bằng chứng kiểm thử web, Android và iOS để chứng minh đầu ra hoạt động trên các nền tảng đã cam kết. |
-| US-35 | Là người thực hiện đồ án, tôi muốn công bố cả trường hợp model không đạt để báo cáo phản ánh đúng kết quả thực nghiệm. |
+### A4. Theo dõi, lịch sử và thông báo
+
+**Loại:** Chức năng sản phẩm. **Vai trò:** Cán bộ hợp tác xã.
+
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-14 | đăng ký hoặc bỏ theo dõi mặt hàng–địa bàn | quản lý thông tin quan tâm. |
+| US-15 | danh sách theo dõi nhất quán trên web và app | tiếp tục công việc giữa các thiết bị. |
+| US-16 | nhận thông báo khi mức rủi ro thay đổi | biết có diễn biến mới. |
+| US-17 | tránh nhận lặp cùng cảnh báo HIGH mỗi ngày | không bỏ qua thông báo hữu ích. |
+| US-18 | xem lịch sử dự báo và đánh giá rủi ro | hiểu thông tin đã thay đổi ra sao. |
+| US-19 | đọc và đánh dấu thông báo trên web/app | quản lý những nội dung đã xem. |
+
+**Căn cứ chia ticket và nghiệm thu**
+
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-14 | FR-10 | Thêm/bỏ theo dõi phạm vi hợp lệ; thao tác không sửa theo dõi của người khác và không tạo trùng. | US-01, US-03 |
+| US-15 | FR-10, FR-14 | Thay đổi trên một nền tảng xuất hiện trên nền tảng khác khi tải lại từ backend. | US-14; API dùng chung |
+| US-16 | FR-11 | Lần đầu MEDIUM/HIGH có thông báo, LOW không có; đổi mức lên hoặc xuống tạo sự kiện phù hợp. | US-13, US-14; lịch sử mức rủi ro |
+| US-17 | FR-11 | HIGH → HIGH nhiều lần và retry cùng lần chạy không tạo thông báo lặp. | US-16; khóa chống trùng sự kiện |
+| US-18 | FR-12 | Tra được dự báo và đánh giá đã lưu; đổi model không sửa ngược kết quả công bố. | US-07, US-13, US-31 |
+| US-19 | FR-11, FR-14 | Chỉ thấy thông báo của mình; trạng thái đọc đồng bộ web/app sau tải lại. | US-01, US-16 |
+
+### A5. Quản trị dữ liệu và vận hành
+
+**Loại:** Chức năng sản phẩm. **Vai trò:** Quản trị viên.
+
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-24 | quản lý nguồn và lịch thu thập | cập nhật dữ liệu phù hợp nhịp công bố. |
+| US-25 | nhập tệp theo mẫu | khởi tạo hoặc bổ sung lịch sử khi cần. |
+| US-26 | xem các dòng hợp lệ, lỗi, trùng và xung đột | kiểm soát dữ liệu nhập. |
+| US-27 | truy vết bản nguồn và thay đổi dữ liệu | kiểm tra sai lệch. |
+| US-28 | chạy lại tác vụ thất bại mà không nhân đôi dữ liệu | khôi phục vận hành. |
+| US-29 | theo dõi trạng thái, thời gian và lỗi từng lần chạy | biết hệ thống đang hoạt động ra sao. |
+| US-30 | xem kết quả đánh giá model so với baseline | quyết định model có đủ điều kiện sử dụng. |
+| US-31 | giữ phiên bản model và dữ liệu gắn với dự báo | tái kiểm tra kết quả đã công bố. |
+
+**Căn cứ chia ticket và nghiệm thu**
+
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-24 | FR-03, FR-13 | Nguồn có lịch và lần chạy; lưu thời gian, kết quả, lỗi; có bằng chứng cập nhật tự động. | US-32; hợp đồng nguồn |
+| US-25 | FR-04 | Có mẫu nhập và nguồn/người nhập; nhận tệp tạo kết quả xử lý kiểm tra được. | US-23; hợp đồng dữ liệu |
+| US-26 | FR-04, FR-05 | Báo số dòng hợp lệ/lỗi/trùng/xung đột; lỗi không âm thầm vào chuỗi dùng huấn luyện. | US-24 hoặc US-25; quy tắc chất lượng |
+| US-27 | FR-05, NFR-01 | Từ quan sát tìm được nguồn/bản gốc/lần nhập; sửa có phiên bản và dấu vết. | US-26; lưu bản thô |
+| US-28 | FR-03, FR-13, NFR-04 | Chạy lại tác vụ thất bại không nhân đôi dữ liệu; lỗi còn tồn tại vẫn được báo đúng. | US-24, US-26; khóa chống trùng |
+| US-29 | FR-13 | Xem trạng thái, thời gian, lỗi và số bản ghi theo run; lỗi nguồn không hiển thị thành công. | US-24/25; định danh lần chạy |
+| US-30 | FR-07, FR-13 | Model và baseline dùng cùng target/mốc; có MAE từng horizon và quyết định qua/không qua gate. | US-32, US-33; D-04 |
+| US-31 | FR-12, NFR-01 | Kết quả gắn snapshot, model/version và cấu hình; truy xuất được sau thay model. | Hợp đồng version/snapshot; US-27 |
+
+### B1. Mobile và hành vi kết nối
+
+**Loại:** Yêu cầu xuyên nền tảng. **Vai trò:** Cán bộ hợp tác xã.
+
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-20 | biết khi mất mạng và có thể thử lại | không nhầm thao tác thất bại là thành công. |
+| US-21 | dữ liệu còn trên màn hình có thời điểm cập nhật | nhận biết dữ liệu cũ. |
+| US-22 | dùng app trên Android hoặc iOS | truy cập bằng điện thoại của mình. |
+
+**Căn cứ chia ticket và nghiệm thu**
+
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-20 | FR-15 | Mất mạng có trạng thái và thử lại; thao tác ghi chưa được server xác nhận không báo thành công. | Luồng app và API; US-22 |
+| US-21 | FR-15, NFR-02 | Dữ liệu còn trên màn hình khi mất mạng ghi thời điểm cập nhật, không thể hiện là dữ liệu mới. | US-06, US-08, US-20 |
+| US-22 | FR-14 | Đăng nhập, dashboard, theo dõi, thông báo chạy trên Android và iOS; có bằng chứng phiên bản/nền tảng. | Spike môi trường; luồng web/API tương ứng |
+
+### B2. Kiểm chứng dữ liệu và đánh giá AI
+
+**Loại:** Công việc kỹ thuật hỗ trợ triển khai. **Vai trò:** Người thực hiện đồ án.
+
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-32 | kiểm chứng nguồn, lịch sử và quyền sử dụng trước huấn luyện | xác định tính khả thi thực tế. |
+| US-33 | đánh giá theo thời gian và từng horizon | phát hiện sai số hoặc rò rỉ thông tin tương lai. |
+| US-35 | công bố cả trường hợp model không đạt | báo cáo phản ánh đúng kết quả thực nghiệm. |
+
+**Căn cứ chia ticket và nghiệm thu**
+
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-32 | FR-02, FR-03, NFR-02 | D0 ghi quyền dùng, số mẫu, khoảng trống, địa bàn/chất lượng, độ trễ và đường cập nhật. | Không; là công việc kiểm chứng đầu vào |
+| US-33 | FR-07, NFR-02 | Split theo thời gian; chỉ dùng thông tin đã công bố; tách target vượt ranh giới; báo mẫu theo horizon. | US-32; snapshot có thời điểm khả dụng |
+| US-35 | FR-07, FR-09 | Báo cáo cả thất bại; model không đạt không kích hoạt cảnh báo dự báo như đã đạt. | US-30, US-33; kết quả gate cuối |
+
+### B3. Bằng chứng bàn giao
+
+**Loại:** Yêu cầu nghiệm thu. **Vai trò:** Người thực hiện đồ án.
+
+| Mã | Nhu cầu | Giá trị |
+|---|---|---|
+| US-34 | lưu bằng chứng kiểm thử web, Android và iOS | chứng minh đầu ra hoạt động trên các nền tảng đã cam kết. |
+
+**Căn cứ chia ticket và nghiệm thu**
+
+| Mã | FR/NFR | Điều kiện hoàn thành | Phụ thuộc đề xuất |
+|---|---|---|---|
+| US-34 | FR-14, FR-15 | Lưu ca kiểm thử, kết quả, nền tảng và phiên bản web/Android/iOS; không dùng ảnh Android thay iOS. | Các hành trình cần nghiệm thu; US-22 |
+
+### Quy tắc chuyển sang ticket
+
+| Bước | Đầu ra cần có |
+|---|---|
+| 1. Chọn hành trình | Chỉ rõ US được bao phủ và người dùng nhận được gì |
+| 2. Chốt phạm vi | Bao gồm, ngoài phạm vi, nền tảng cần hỗ trợ |
+| 3. Viết nghiệm thu | Given/When/Then hoặc checklist, có ca lỗi/quyền/thiếu dữ liệu phù hợp |
+| 4. Khai báo blocker | Chỉ blocker thực sự chặn ticket; dùng ID ticket sau khi tạo |
+| 5. Chỉ ra bằng chứng | Test API, backtest hoặc hành trình web/Android/iOS phù hợp |
+| 6. Kiểm tra sẵn sàng | Không tự đặt ngưỡng chưa chốt; ticket triển khai phụ thuộc gate chưa đạt phải bị chặn |
+
+Chưa tạo ticket trong lần chỉnh spec này. Các mã D-02, D-04, D-05, D-06 tham chiếu sổ điểm chưa chốt của kế hoạch dữ liệu/AI; nội dung tương ứng được tóm tắt ở mục 10.
 
 <a id="quyet-dinh"></a>
 
