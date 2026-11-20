@@ -63,3 +63,52 @@ G0 mobile remains **partially evidenced**: local prerequisites are inventoried a
 ## Follow-up by implementation session
 
 After this inventory, Docker Desktop was started and `docker info --format '{{.ServerVersion}}'` returned 29.6.2. PostgreSQL 18 test cluster was created under ignored data/test-postgres, bound to 127.0.0.1:55432, with a separate agtech_test database. This is local test infrastructure only; localhost trust authentication is not a production deployment configuration. Existing host databases were not modified. These follow-up checks do not establish Android/iOS build success.
+# Bổ sung G0 mobile tại Desktop/AGTECH — 20/11/2026
+
+## Phạm vi và kết quả
+
+Spike tối thiểu, không phải app nghiệp vụ #14. Đã biên dịch **APK Android debug x86_64 thực**, không chỉ export JavaScript. Chưa chạy được app trên thiết bị/emulator và chưa chứng minh kết nối API trong Android. iOS vẫn chưa có native build/runtime. Không đánh dấu FR-14/15 hoặc sản phẩm mobile đạt nghiệm thu.
+
+Môi trường: Windows, Node 24.11.1, npm 11.6.2, Java JDK 17; Expo 58.0.26, React Native 0.88.1, React 19.3.0, TypeScript 6.0.3. Gradle wrapper 9.4.1, Kotlin plugin 2.2.10, compileSdk 37/targetSdk 36, NDK 27.1.12297006. Gradle dùng license SDK đã có; tự tải platform/build tools/NDK/CMake cần thiết. Không đổi biến môi trường toàn máy.
+
+Thư mục spike cục bộ: `data/mobile-g0/` (gitignore). Scaffold từ blank-typescript@sdk-58. Các lệnh thực đã chạy:
+
+```powershell
+npx --yes create-expo-app@latest data/mobile-g0 --template blank-typescript --no-install
+cd data/mobile-g0
+npm install
+npx tsc --noEmit
+$env:CI='1'
+$env:ANDROID_HOME='C:\Users\vuxnye\AppData\Local\Android\Sdk'
+$env:ANDROID_AVD_HOME='C:\Users\vuxnye\.android\avd'
+$env:JAVA_HOME='C:\Program Files\Java\jdk-17'
+$env:PATH="$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:PATH"
+npx expo run:android --no-bundler
+```
+
+TypeScript đạt. Expo prebuild tạo Android thành công nhưng lệnh run trả exit 1: `It took too long to start the Android emulator: Medium_Phone_API_36.1`. `adb devices` thấy emulator-5554 offline, không có thiết bị chạy app. Đã dừng emulator do spike tạo sau timeout; không wipe dữ liệu AVD.
+
+Build tách khỏi thiết bị:
+
+```powershell
+cd android
+.\gradlew.bat :app:assembleDebug --no-daemon --console=plain --max-workers=2 -PreactNativeArchitectures=x86_64
+```
+
+Kết quả: `BUILD SUCCESSFUL in 40s`, 176 task (11 chạy, 165 up-to-date). Lần build tất cả kiến trúc trước đó đã được dừng để giới hạn tài nguyên; thời lượng 40 giây có dùng cache từ lần trước, không phải thời gian cold build. APK tại `data/mobile-g0/android/app/build/outputs/apk/debug/app-debug.apk`; SHA-256 `2f00ce14f3ee36b9aac3cd38de2fce330fd9603167e86009c39d2e866b0e7b28`. Chỉ debug artifact x86_64; không coi là bản release/ARM/iOS hoặc app đã cài chạy. Không commit APK, node_modules hay thư mục native sinh tự động.
+
+## API và khả năng tái lập
+
+Backend đã khởi chạy ở `127.0.0.1:8012`; màn hình spike gọi `http://10.0.2.2:8012/health` theo đường host của Android emulator. Mã có trạng thái loading, thành công, thất bại và nút thử lại. Do emulator không lên, request này **chưa có bằng chứng thực thi trong app**. Không dùng HTTP trên localhost/spike làm bằng chứng HTTPS triển khai.
+
+Để tái tạo trên môi trường mới: scaffold template trên, đặt `expo.android.package` thành `vn.agtech.g0spike` trong app.json trước prebuild, rồi thay App.tsx bằng mã ở `scripts/mobile-g0-App.tsx`. Giữ dependency lock của lần tái tạo để so version; phiên bản cần khớp bảng trên trước so kết quả. Build script chỉ dùng môi trường local, không dùng EAS/account/Apple signing. Tham chiếu [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [Expo CLI native compile](https://docs.expo.dev/more/expo-cli/#compiling), [React Native networking](https://reactnative.dev/docs/network).
+
+Cần tiếp tục kiểm tra emulator acceleration/boot hoặc thiết bị Android được cấp quyền, cài APK và đo kết nối/API thực; iOS cần Mac/Xcode hoặc tài khoản Expo/EAS cùng điều kiện Apple signing và thiết bị phù hợp như báo cáo gốc. Đây là thiếu bằng chứng môi trường, không tự đổi phạm vi Android/iOS.
+
+Lint spike: `CI=1 npx expo lint` cài eslint 9/eslint-config-expo 58.0.4 và phát hiện việc gọi setState đồng bộ qua effect trong màn hình thử. Đã bỏ tự động gọi API lúc mount, dùng nút Retry API để chủ động gọi; `npx tsc --noEmit` và `npx expo lint` sau sửa đều exit 0. Mã cuối lưu ở `scripts/mobile-g0-App.tsx`.
+
+Đã thử thêm `CI=1 npx expo run:ios --no-bundler`: exit 1, thông báo `iOS apps can only be built on macOS devices. Use eas build -p ios to build in the cloud.` `CI=1 npx expo whoami` trả `Not logged in` (exit 1). Chưa có phiên Expo được xác thực trong môi trường này; không đăng nhập hay tạo cloud build thay người dùng. Đây là lỗi/điều kiện thực quan sát được, không phải bằng chứng iOS đạt.
+
+APK cuối đã build lại sau sửa lint, dung lượng 46.587.977 byte. Đây là debug APK **không chứa JavaScript bundle**, chỉ chứng minh biên dịch native; App.tsx được kiểm bằng TypeScript/lint riêng. Khi có emulator/thiết bị hoạt động, còn phải chạy Metro (`npx expo start`), cấu hình đường mạng host/ADB phù hợp rồi cài/mở app và bấm Retry API để kiểm chứng thật. Không coi việc có mã fetch hoặc APK là đã chạy JavaScript/kết nối API.
+
+Lockfile npm cục bộ sau cấu hình lint có SHA-256 `603696a3c1337a6ef8311466e89c73c5090a5b0970d5b316ecfc71231855c73a`. Lockfile và scaffold đầy đủ vẫn ở thư mục data bị gitignore; lệnh @latest không bảo đảm tái tạo bit-for-bit trên máy mới. Các version, checksum và script giữ lại dùng để đối chiếu, không thay bản khóa dependency nếu cần tái lập artifact chính xác.
