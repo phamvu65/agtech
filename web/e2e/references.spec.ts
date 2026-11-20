@@ -1,0 +1,21 @@
+import {test,expect} from '@playwright/test';
+test('reference data stays separate and monthly values are not daily prices',async({page})=>{
+ await page.goto('/'); await page.getByLabel('Tên đăng nhập',{exact:true}).fill('admin-e2e');
+ await page.getByLabel('Mật khẩu',{exact:true}).fill(process.env.E2E_PASSWORD!); await page.getByRole('button',{name:'Đăng nhập →'}).click();
+ await expect(page.getByRole('heading',{name:'Tổng quan thị trường'})).toBeVisible();
+ const response=await page.request.post('/api/admin/price-series',{headers:{Origin:'http://localhost:3001'},data:{commodity:'Cà phê reference fixture',locality_code:'REF',locality_name:'REF',quality:'unspecified',source_name:'Synthetic',source_url:'https://example.com/ref',dataset_kind:'synthetic',rights_basis:'Tự tạo kiểm thử nguồn tham khảo'}});
+ expect(response.status()).toBe(201); const series=await response.json(); await page.reload();
+ await page.getByLabel('Chuỗi giá đang xem').selectOption(String(series.id));
+ await page.getByLabel('Từ ngày',{exact:true}).fill('2025-06-23');await page.getByLabel('Đến ngày',{exact:true}).fill('2025-06-25');
+ await page.getByRole('button',{name:'Xem lịch sử'}).click();
+ await expect(page.getByRole('heading',{name:'Dữ liệu tham khảo'})).toBeVisible();
+ await page.getByRole('button',{name:'Nạp tham khảo thử nghiệm'}).click();
+ await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toContainText('2025-06-01 → 2025-06-30');
+ await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toContainText('USD/kg');
+ await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toContainText('reanalysis_fixture');
+ await expect(page.getByRole('table',{name:'Giá theo ngày'})).toContainText('Thiếu giá');
+ await page.route('**/api/price-series/*/references?*',route=>route.fulfill({status:503,json:{detail:'Reference unavailable'}}));
+ await page.getByRole('button',{name:'Nạp tham khảo thử nghiệm'}).click();
+ await expect(page.getByRole('alert').filter({hasText:'Reference unavailable'})).toBeVisible();
+ await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toHaveCount(0);
+});
