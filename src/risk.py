@@ -124,7 +124,12 @@ def evaluate_risk(forecast, policy, db, settings):
         "policy_sha256": policy.sha256 if policy else None,
         "reasons": [],
         "drop_pct": None,
-        "anomaly": {"flag": None, "method": "observed_change_pct_v1"},
+        "anomaly": {
+            "flag": None,
+            "method": "observed_change_pct_v1",
+            "threshold_pct": policy.config["anomaly_pct"] if policy else None,
+            "reason": "Absolute change between two consecutive available observed calendar days; fixture threshold only.",
+        },
     }
     points = forecast.payload.get("predictions", [])
     if (

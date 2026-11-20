@@ -42,6 +42,8 @@ def test_forecast_has_seven_next_calendar_days_and_never_promotes_fixture_model(
         "2025-02-11",
     ]
     assert forecast["data_as_of"] == "2025-02-04" and forecast["model_version"] == "linear_time_v1"
+    assert forecast["evaluation"]["metrics"]["test"]["7"]["target_count"] == 8
+    assert forecast["evaluation"]["fixture_only"] is True
     assert client.get(f"/forecasts/{forecast['id']}").json() == forecast
     assert client.get(f"/price-series/{series['id']}/forecasts/latest").json()["id"] == forecast["id"]
     client.app.state.settings.app_env = "production"

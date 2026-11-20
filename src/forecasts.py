@@ -113,6 +113,13 @@ def create_forecast(series_id: int, body: ForecastRequest, db: DB, admin: Admini
                         snapshot_sha256=snapshot.sha256,
                         snapshot_id=snapshot.id,
                         historical_simulation=origin < datetime.now(UTC).date(),
+                        evaluation={
+                            "backtest_id": report.id,
+                            "created_at": report.created_at.isoformat(),
+                            "fixture_only": True,
+                            "limitations": report.reasons,
+                            "metrics": report.metrics,
+                        },
                     )
     run = ForecastRun(
         series_id=series_id,

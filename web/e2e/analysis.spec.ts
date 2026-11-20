@@ -67,6 +67,12 @@ test("fixture analysis, risk transitions and private read state integrate on web
     .getByLabel("Quy tắc khôi phục thử nghiệm")
     .selectOption("compare_last_valid");
   await page.getByRole("button", { name: "Lưu quy tắc fixture" }).click();
+  await page
+    .getByRole("button", { name: "Đánh giá cảnh báo fixture", exact: true })
+    .click();
+  await expect(
+    page.getByRole("table", { name: "Đánh giá cảnh báo fixture" }),
+  ).toBeVisible();
   await page.getByLabel("Chuỗi muốn theo dõi").selectOption(String(series.id));
   await page.getByRole("button", { name: "Thêm theo dõi" }).click();
   await page
@@ -80,4 +86,24 @@ test("fixture analysis, risk transitions and private read state integrate on web
   await expect(notice).toBeVisible();
   await notice.getByRole("button", { name: "Đánh dấu đã đọc" }).click();
   await expect(notice).toContainText("Đã đọc");
+  await page.getByLabel("Chuỗi giá đang xem").selectOption(String(series.id));
+  await page.getByLabel("Từ ngày", { exact: true }).fill("2025-01-01");
+  await page.getByLabel("Đến ngày", { exact: true }).fill("2025-02-04");
+  await page.getByRole("button", { name: "Xem lịch sử", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Lịch sử dự báo và đánh giá" }),
+  ).toBeVisible();
+  const trainedHistory = page
+    .locator("details")
+    .filter({ has: page.locator("summary", { hasText: "Dự báo #" }) })
+    .nth(1);
+  await trainedHistory.locator("summary").click();
+  await expect(
+    trainedHistory.getByRole("table", {
+      name: "Sai số tham chiếu theo horizon",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Phương pháp: observed_change_pct_v1/),
+  ).toBeVisible();
 });
