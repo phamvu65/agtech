@@ -29,7 +29,7 @@ test('admin imports labeled synthetic CSV; history shows gaps, filters and retry
   await page.getByLabel('Chất lượng theo nguồn').fill('unspecified');
   await page.getByLabel('Tên nguồn').fill('Fixture tự tạo');
   await page.getByLabel('Liên kết nguồn', {exact: true}).fill('https://example.com/fixture');
-  await page.getByLabel('Căn cứ sử dụng').fill('Tự tạo để kiểm thử phần mềm; không phải giá thị trường');
+  await page.getByLabel('Căn cứ sử dụng', {exact:true}).fill('Tự tạo để kiểm thử phần mềm; không phải giá thị trường');
   await page.getByRole('button', {name: 'Tạo chuỗi giá'}).click();
   await expect(page.getByLabel('Chuỗi giá đang xem')).toContainText('Địa bàn thử nghiệm');
   const csv = 'observed_on,price_vnd_per_kg,unit,published_at,collected_at,source_document_url\n' +
