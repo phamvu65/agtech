@@ -57,7 +57,7 @@ export default function PriceMarket({isAdmin}: {isAdmin: boolean}) {
     return () => {active = false;};
   }, []);
   useEffect(() => {
-    if (!query.id) return;
+    if (!query.id) {setHistoryBusy(false); return;}
     let active = true;
     setHistoryBusy(true); setHistory(null); setError("");
     api<History>(`price-series/${query.id}/history?start=${query.start}&end=${query.end}`)
@@ -66,12 +66,15 @@ export default function PriceMarket({isAdmin}: {isAdmin: boolean}) {
     return () => {active = false;};
   }, [query]);
 
+  function clearHistory() {
+    setHistory(null); setQuery(old => ({...old, id: ""})); setHistoryBusy(false);
+  }
   async function createSeries(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = event.currentTarget;
     setBusy(true); setError("");
     try {
       const created = await api<Series>("admin/price-series", "POST", Object.fromEntries(new FormData(form)));
-      setSeries(items => [...items, created]); setSelected(String(created.id)); setHistory(null); setReport(null); form.reset();
+      setSeries(items => [...items, created]); setSelected(String(created.id)); clearHistory(); setReport(null); form.reset();
     } catch (err) {setError((err as Error).message);} finally {setBusy(false);}
   }
   async function importFile(event: FormEvent<HTMLFormElement>) {
@@ -95,11 +98,11 @@ export default function PriceMarket({isAdmin}: {isAdmin: boolean}) {
     {!loading && !series.length && <div className="panel empty"><span className="tag">ĐANG KIỂM CHỨNG NGUỒN</span><h3>Chưa có dữ liệu giá đã kiểm chứng.</h3><p>Chưa có chuỗi giá để xem. Trạng thái này không mang nghĩa rủi ro thấp.</p></div>}
     {series.length > 0 && <div className="panel">
       <form onSubmit={filter} className="price-filters">
-        <label>Chuỗi giá đang xem<select value={selected} onChange={e => {setSelected(e.target.value); setHistory(null); setQuery({id:"",start:"",end:"",revision:0}); setReport(null);}}>
+        <label>Chuỗi giá đang xem<select disabled={busy} value={selected} onChange={e => {setSelected(e.target.value); clearHistory(); setReport(null);}}>
           {series.map(item => <option key={item.id} value={item.id}>{item.commodity} · {item.locality_name} · {item.quality} · {item.source_name} · {item.dataset_kind === "synthetic" ? "Thử nghiệm" : "Có căn cứ sử dụng"}</option>)}</select></label>
-        <label>Từ ngày<input type="date" required value={start} onChange={e => {setStart(e.target.value); setHistory(null);}}/></label>
-        <label>Đến ngày<input type="date" required value={end} onChange={e => {setEnd(e.target.value); setHistory(null);}}/></label>
-        <button disabled={historyBusy || !selected}>Xem lịch sử</button>
+        <label>Từ ngày<input type="date" disabled={busy} required value={start} onChange={e => {setStart(e.target.value); clearHistory();}}/></label>
+        <label>Đến ngày<input type="date" disabled={busy} required value={end} onChange={e => {setEnd(e.target.value); clearHistory();}}/></label>
+        <button disabled={busy || historyBusy || !selected}>Xem lịch sử</button>
       </form>
       {current && <><p className="status">{current.dataset_kind === "synthetic" ? "Dữ liệu thử nghiệm — không phải giá thị trường." : "Dữ liệu có căn cứ sử dụng do quản trị ghi nhận."}</p>
         <p className="muted">{current.commodity} · {current.locality_name} ({current.locality_code}) · Chất lượng: {current.quality} · VNĐ/kg<br/>

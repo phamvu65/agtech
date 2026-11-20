@@ -25,7 +25,7 @@ try:
     subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=root, env=env, check=True)
     subprocess.run([sys.executable, "-m", "src.manage", "create-admin", "--username", "admin-e2e", "--password-stdin"],
                    input=env["E2E_PASSWORD"] + "\n", text=True, cwd=root, env=env, check=True)
-    result = subprocess.run(["npm.cmd" if os.name == "nt" else "npm", "run", "test:e2e"],
+    result = subprocess.run(["npm.cmd" if os.name == "nt" else "npm", "run", "test:e2e", *sys.argv[1:]],
                             cwd=root / "web", env=env)
 finally:
     with engine.begin() as connection:

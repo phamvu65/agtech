@@ -4,10 +4,10 @@ import hashlib
 import io
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, HttpUrl, ValidationError, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -80,15 +80,18 @@ def import_data(record, db):
             'counts': record.counts, 'rows': record.rows}
 
 
-@router.post('/admin/price-series/{series_id}/imports', status_code=201)
-async def import_prices(series_id: int, request: Request, db: DB, admin: Administrator,
-                        filename: str = Query(default='prices.csv', min_length=1, max_length=200)):
+async def csv_body(request: Request) -> bytes:
     raw_buffer = bytearray()
     async for chunk in request.stream():
         raw_buffer.extend(chunk)
         if len(raw_buffer) > 2_000_000:
             raise HTTPException(413, 'CSV must be at most 2 MB')
-    raw = bytes(raw_buffer)
+    return bytes(raw_buffer)
+
+
+@router.post('/admin/price-series/{series_id}/imports', status_code=201)
+def import_prices(series_id: int, raw: Annotated[bytes, Depends(csv_body)], db: DB, admin: Administrator,
+                  filename: str = Query(default='prices.csv', min_length=1, max_length=200)):
     series = db.scalar(select(PriceSeries).where(PriceSeries.id == series_id).with_for_update())
     if not series:
         raise HTTPException(404, 'Price series not found')

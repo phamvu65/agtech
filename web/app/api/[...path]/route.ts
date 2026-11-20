@@ -44,7 +44,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     if (upstream.headers.get("content-type")) output.set("Content-Type", upstream.headers.get("content-type")!);
     if (upstream.headers.get("content-disposition")) output.set("Content-Disposition", upstream.headers.get("content-disposition")!);
     for (const value of upstream.headers.getSetCookie()) output.append("Set-Cookie", value);
-    return new Response(upstream.status === 204 ? null : await upstream.text(), { status: upstream.status, headers: output });
+    return new Response(upstream.status === 204 ? null : await upstream.arrayBuffer(), { status: upstream.status, headers: output });
   } catch {
     return Response.json({ detail: "Không kết nối được máy chủ. Hãy thử lại." }, { status: 502 });
   }
