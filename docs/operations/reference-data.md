@@ -1,6 +1,6 @@
 # Dữ liệu tham khảo (#9)
 
-Phần mềm giữ giá quốc tế theo tháng và thời tiết theo ngày ở bảng riêng, không đưa vào target giá thu mua nội địa. API `/price-series/{id}/references?start=...&end=...` trả đúng kỳ nguồn, không nội suy hoặc lặp giá tháng thành ngày. `as_of` có timezone chỉ nhận bản ghi có available_at đã biết và không sau mốc đó; unknown bị loại khỏi truy vấn point-in-time. Không tự suy công bố/khả dụng từ ngày quan sát.
+Phần mềm giữ giá quốc tế theo tháng và thời tiết theo ngày ở bảng riêng, không đưa vào target giá thu mua nội địa. API `/price-series/{id}/references?start=...&end=...` trả đúng kỳ nguồn, không nội suy hoặc lặp giá tháng thành ngày. `as_of` có timezone chỉ nhận bản ghi có available_at đã biết và không sau mốc đó; unknown bị loại khỏi truy vấn point-in-time. Không tự suy công bố/khả dụng từ ngày quan sát. Thời điểm công bố/khả dụng không được trước ngày kết thúc kỳ lịch sử (so ngày UTC); truy vấn as_of cũng loại kỳ chưa kết thúc. Khi tải tham khảo thất bại, không giữ bảng cũ dưới ngữ cảnh mới.
 
 Quản trị có thể POST JSON tới `/admin/price-series/{id}/reference-imports`; bản gốc, SHA-256, người nhập, thời điểm và lỗi từng bản ghi được giữ. Đọc audit/bản gốc ở `/admin/reference-imports/{import_id}` và `/file`. Nhập lại cùng bản ghi không nhân đôi; xung đột bị giữ ngoài tập quan sát chuẩn. Cùng nguồn/kỳ/loại/địa điểm/sản phẩm xác định một quan sát; không trộn chất lượng hoặc địa bàn.
 

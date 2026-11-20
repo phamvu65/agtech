@@ -94,3 +94,36 @@ def test_reference_access_and_fixture_production_gate(auth_client):
         client.post(f"/admin/price-series/{series['id']}/reference-fixture", json={}, headers=bearer).status_code == 403
     )
     assert client.get("/admin/reference-imports/1", headers=bearer).status_code == 403
+
+
+def test_reference_cannot_claim_availability_before_its_historical_period(auth_client):
+    client = auth_client
+    admin(client)
+    series = client.post("/admin/price-series", json=SERIES, headers=ORIGIN).json()
+    document = {
+        "kind": "international_monthly",
+        "source_name": "Fixture",
+        "source_url": "https://example.com/month",
+        "license": "Synthetic",
+        "attribution": "AGTECH fixture",
+        "dataset_kind": "synthetic",
+        "records": [
+            {
+                "period_start": "2025-06-01",
+                "period_end": "2025-06-30",
+                "variable": "coffee_robusta",
+                "value": "3",
+                "unit": "USD/kg",
+                "published_at": "2025-01-01T00:00:00Z",
+                "available_at": "2025-01-01T00:00:00Z",
+            }
+        ],
+    }
+    response = client.post(f"/admin/price-series/{series['id']}/reference-imports", json=document, headers=ORIGIN)
+    assert response.json()["counts"]["error"] == 1
+    assert (
+        client.get(
+            f"/price-series/{series['id']}/references?start=2025-06-01&end=2025-06-30&as_of=2025-01-02T00:00:00Z"
+        ).json()["items"]
+        == []
+    )

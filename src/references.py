@@ -59,6 +59,11 @@ class Point(BaseModel):
     def times(self):
         if self.period_end < self.period_start or self.period_end > datetime.now(UTC).date():
             raise ValueError("Invalid historical period")
+        for moment in (self.published_at, self.available_at):
+            if moment and moment.astimezone(UTC).date() < self.period_end:
+                raise ValueError("Historical publication/availability precedes the completed observation period")
+            if moment and moment > datetime.now(UTC):
+                raise ValueError("Publication/availability is in the future")
         if self.available_at and self.published_at and self.available_at < self.published_at:
             raise ValueError("Availability precedes publication")
         if self.available_at and self.available_at > datetime.now(UTC):
@@ -243,7 +248,11 @@ def references(series_id: int, start: date, end: date, db: DB, user: Authenticat
         item = row.payload
         if item["period_start"] > end.isoformat() or item["period_end"] < start.isoformat():
             continue
-        if as_of and (not item["available_at"] or datetime.fromisoformat(item["available_at"]) > as_of):
+        if as_of and (
+            item["period_end"] > as_of.astimezone(UTC).date().isoformat()
+            or not item["available_at"]
+            or datetime.fromisoformat(item["available_at"]) > as_of
+        ):
             continue
         items.append({**item, "id": row.id, "import_id": row.import_id})
     return {"items": items, "reference_only": True, "as_of": as_of.isoformat() if as_of else None}

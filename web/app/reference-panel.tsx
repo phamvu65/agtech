@@ -5,7 +5,7 @@ type Row={id:number;import_id:number;kind:string;period_start:string;period_end:
 const time=(value:string|null)=>value?new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(value)):'Chưa biết';
 export default function ReferencePanel({seriesId,start,end,demo,admin}:{seriesId:number;start:string;end:string;demo:boolean;admin:boolean}){
  const [rows,setRows]=useState<Row[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);
- useEffect(()=>{let active=true;setLoading(true);setError('');
+ useEffect(()=>{let active=true;setRows([]);setLoading(true);setError('');
   api<{items:Row[]}>(`price-series/${seriesId}/references?start=${start}&end=${end}`).then(data=>{if(active)setRows(data.items);}).catch(err=>{if(active)setError(err.message);}).finally(()=>{if(active)setLoading(false);});
   return()=>{active=false;};},[seriesId,start,end,revision]);
  async function seed(){setBusy(true);setError('');try{await api(`admin/price-series/${seriesId}/reference-fixture`,'POST',{});setRevision(value=>value+1);}catch(err){setError((err as Error).message);}finally{setBusy(false);}}

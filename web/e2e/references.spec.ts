@@ -14,4 +14,8 @@ test('reference data stays separate and monthly values are not daily prices',asy
  await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toContainText('USD/kg');
  await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toContainText('reanalysis_fixture');
  await expect(page.getByRole('table',{name:'Giá theo ngày'})).toContainText('Thiếu giá');
+ await page.route('**/api/price-series/*/references?*',route=>route.fulfill({status:503,json:{detail:'Reference unavailable'}}));
+ await page.getByRole('button',{name:'Nạp tham khảo thử nghiệm'}).click();
+ await expect(page.getByRole('alert').filter({hasText:'Reference unavailable'})).toBeVisible();
+ await expect(page.getByRole('table',{name:'Dữ liệu tham khảo riêng'})).toHaveCount(0);
 });
