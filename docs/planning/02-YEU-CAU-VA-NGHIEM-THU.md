@@ -1,6 +1,24 @@
 # AGTECH-01 — Đặc tả yêu cầu và tiêu chí nghiệm thu
 
-Phiên bản 1.0 — 20/11/2026. Phạm vi nghiệp vụ đã xác nhận; các cách xử lý chi tiết dưới đây là đề xuất thiết kế để triển khai và kiểm thử. Các ngưỡng định lượng phụ thuộc dữ liệu được quản lý trong tài liệu 03.
+**Điều hướng:** [Bản đồ yêu cầu](#section-1) · [1. Quyền truy cập](#section-2) · [2. Danh mục yêu cầu](#section-3) · [3. Quy tắc thông báo chi tiết đề xuất](#section-4) · [4. Yêu cầu chất lượng](#section-5) · [5. Kịch bản nghiệm thu xuyên suốt](#section-6) · [6. Điều kiện hoàn tất](#section-7)
+
+Phiên bản 1.1 — 20/11/2026. Phạm vi nghiệp vụ đã xác nhận; các cách xử lý chi tiết dưới đây là đề xuất thiết kế để triển khai và kiểm thử. Các ngưỡng định lượng phụ thuộc dữ liệu được quản lý trong tài liệu 03.
+
+<a id="section-1"></a>
+
+## Bản đồ yêu cầu
+
+| Nội dung | Tóm tắt |
+| --- | --- |
+| Danh tính và dữ liệu | FR-01–FR-05 |
+| Phân tích và quyết định | FR-06–FR-09 |
+| Theo dõi và vận hành | FR-10–FR-13 |
+| Mobile và kết nối | FR-14–FR-15 |
+| Chất lượng | NFR-01–NFR-06 |
+
+> **Cách đọc trạng thái:** Đã chốt = được xác nhận; Đề xuất = phương án thiết kế; Cần kiểm chứng = chưa có bằng chứng đạt. Sơ đồ mô tả thiết kế mục tiêu, không chứng nhận chức năng đã triển khai.
+
+<a id="section-2"></a>
 
 ## 1. Quyền truy cập
 
@@ -12,6 +30,8 @@ Phiên bản 1.0 — 20/11/2026. Phạm vi nghiệp vụ đã xác nhận; các 
 | Kiểm tra lỗi dữ liệu và tác vụ | Không | Web |
 
 Đề xuất MVP: quản trị viên cấp tài khoản; tự đăng ký và quy trình quên mật khẩu tự phục vụ chưa bắt buộc. Mọi kiểm tra quyền phải được thực hiện ở backend, kể cả khi app không hiển thị màn hình quản trị.
+
+<a id="section-3"></a>
 
 ## 2. Danh mục yêu cầu
 
@@ -33,6 +53,21 @@ Phiên bản 1.0 — 20/11/2026. Phạm vi nghiệp vụ đã xác nhận; các 
 | FR-14 | App Android/iOS | Đăng nhập, xem dashboard, theo dõi và thông báo chạy được trên cả hai nền tảng; lưu bằng chứng nền tảng và phiên bản đã kiểm thử |
 | FR-15 | Mất mạng | Hiển thị mất kết nối và thử lại; không báo thao tác ghi thành công khi server chưa xác nhận; dữ liệu cũ còn hiện có thời điểm cập nhật |
 
+### Luồng người dùng và quản trị
+
+```mermaid
+flowchart TD
+    A["Đăng nhập"] --> B{"Vai trò"}
+    B -->|Cán bộ hợp tác xã| C["Web hoặc app"]
+    C --> D["Dashboard, theo dõi, thông báo"]
+    B -->|Quản trị viên| E["Web quản trị"]
+    E --> F["Tài khoản, nguồn, nhập tệp, tác vụ"]
+    D --> G["Backend kiểm tra quyền từng yêu cầu"]
+    F --> G
+```
+
+<a id="section-4"></a>
+
 ## 3. Quy tắc thông báo chi tiết đề xuất
 
 Đánh giá rủi ro thuộc chuỗi mặt hàng–địa bàn; thông báo cá nhân thuộc người theo dõi chuỗi đó. Danh sách thông báo và trạng thái đã đọc dùng chung giữa web/app.
@@ -49,6 +84,8 @@ Phiên bản 1.0 — 20/11/2026. Phạm vi nghiệp vụ đã xác nhận; các 
 
 Không gửi push khi app đóng trong MVP. Tần suất tải lại trong app/web là lựa chọn triển khai, không có yêu cầu thời gian thực.
 
+<a id="section-5"></a>
+
 ## 4. Yêu cầu chất lượng
 
 | Mã | Yêu cầu | Bằng chứng |
@@ -60,15 +97,23 @@ Không gửi push khi app đóng trong MVP. Tần suất tải lại trong app/w
 | NFR-05 | Trải nghiệm | Có trạng thái đang tải, rỗng, lỗi, thiếu dữ liệu; màu rủi ro đi cùng nhãn chữ; kiểm tra màn hình nhỏ |
 | NFR-06 | Hiệu năng | Đo thời gian API và tải dashboard trên dữ liệu/quy mô thử đã ghi rõ; chốt ngân sách độ trễ trước nghiệm thu, không tuyên bố hỗ trợ tải chưa đo |
 
+<a id="section-6"></a>
+
 ## 5. Kịch bản nghiệm thu xuyên suốt
 
-1. Quản trị nhập mẫu có dòng hợp lệ, trùng, sai đơn vị và xung đột; kiểm tra cách phân loại và truy vết.
-2. Chạy lại cùng tác vụ; số quan sát không tăng sai.
-3. Người dùng xem cùng phạm vi trên web, Android và iOS; giá, nguồn, kỳ dự báo và mức rủi ro thống nhất.
-4. Dùng dữ liệu kiểm thử có nhãn để kiểm tra chuyển LOW → HIGH → HIGH → LOW và trạng thái chưa đủ cơ sở. Dữ liệu này chỉ kiểm tra phần mềm, không chứng minh độ chính xác AI.
-5. Vô hiệu hóa dữ liệu đầu vào hoặc model; dashboard vẫn xem lịch sử nhưng không tiếp tục trình bày dự báo cũ như hiện hành.
-6. Ngắt mạng app, thử thao tác và kết nối lại; không nhân đôi theo dõi/thông báo.
-7. Kiểm tra quyền bằng cách gọi API quản trị và dữ liệu cá nhân khác trực tiếp.
+
+| Ca | Thao tác | Kết quả cần kiểm tra |
+| --- | --- | --- |
+| AC-01 | Nhập mẫu hợp lệ, trùng, sai đơn vị, xung đột | Phân loại và truy vết đúng |
+| AC-02 | Chạy lại cùng tác vụ | Không nhân đôi quan sát |
+| AC-03 | Mở cùng phạm vi trên web, Android, iOS | Giá, nguồn, kỳ dự báo và rủi ro thống nhất |
+| AC-04 | Chuyển LOW → HIGH → HIGH → LOW và chưa đủ cơ sở | Đúng lịch sử và thông báo; fixture chỉ kiểm tra phần mềm, không chứng minh AI |
+| AC-05 | Vô hiệu hóa đầu vào hoặc model | Còn lịch sử; dự báo cũ không được coi là hiện hành |
+| AC-06 | Ngắt mạng rồi kết nối app | Không nhân đôi theo dõi/thông báo |
+| AC-07 | Gọi API quản trị và dữ liệu người khác | Backend từ chối truy cập trái quyền |
+
+
+<a id="section-7"></a>
 
 ## 6. Điều kiện hoàn tất
 

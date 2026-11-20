@@ -1,6 +1,40 @@
 # AGTECH-01 — Kế hoạch triển khai theo giai đoạn
 
-Phiên bản 1.0 — 20/11/2026. Thực hiện cá nhân, chưa có hạn chót cố định; kế hoạch dùng mốc đầu ra và điều kiện chuyển bước. Không tự cam kết số tuần khi chưa kiểm chứng dữ liệu và môi trường mobile.
+**Điều hướng:** [Mốc bàn giao](#section-1) · [Sơ đồ phụ thuộc giai đoạn](#section-2) · [1. Trình tự và đầu ra](#section-3) · [2. Công việc theo lát cắt có thể kiểm tra](#section-4) · [3. Các cổng quyết định](#section-5) · [4. Chiến lược kiểm thử](#section-6) · [5. Rủi ro tiến độ](#section-7) · [6. Gói bàn giao dự kiến](#section-8)
+
+Phiên bản 1.1 — 20/11/2026. Thực hiện cá nhân, chưa có hạn chót cố định; kế hoạch dùng mốc đầu ra và điều kiện chuyển bước. Không tự cam kết số tuần khi chưa kiểm chứng dữ liệu và môi trường mobile.
+
+<a id="section-1"></a>
+
+## Mốc bàn giao
+
+| Nội dung | Tóm tắt |
+| --- | --- |
+| G0 | Chứng minh tính khả thi dữ liệu và môi trường app |
+| G1–G2 | Luồng dữ liệu đến web |
+| G3–G4 | Đánh giá AI và luồng cảnh báo trên web |
+| G5 | Hoàn thiện app Android/iOS |
+| G6 | Triển khai, phục hồi và bằng chứng nghiệm thu |
+
+> **Cách đọc trạng thái:** Đã chốt = được xác nhận; Đề xuất = phương án thiết kế; Cần kiểm chứng = chưa có bằng chứng đạt. Sơ đồ mô tả thiết kế mục tiêu, không chứng nhận chức năng đã triển khai.
+
+<a id="section-2"></a>
+
+## Sơ đồ phụ thuộc giai đoạn
+
+```mermaid
+flowchart LR
+    G0["G0: dữ liệu và spike app"] --> G1["G1: nền tảng"]
+    G1 --> G2["G2: ba nhóm nguồn"]
+    G2 --> G3["G3: đánh giá AI"]
+    G3 --> G4["G4: web và cảnh báo"]
+    G4 --> G5["G5: Android và iOS"]
+    G5 --> G6["G6: triển khai và nghiệm thu"]
+```
+
+Đây là thứ tự phụ thuộc, không phải cam kết thời lượng. Model không đạt tại G3 phải được báo cáo; không kích hoạt cảnh báo dự báo như đã đạt.
+
+<a id="section-3"></a>
 
 ## 1. Trình tự và đầu ra
 
@@ -15,6 +49,8 @@ Phiên bản 1.0 — 20/11/2026. Thực hiện cá nhân, chưa có hạn chót 
 | G6 — Triển khai và nghiệm thu | G5 | Web online, bản app thử nghiệm, sao lưu/phục hồi, hướng dẫn và bằng chứng | Hoàn tất ma trận nghiệm thu, công bố giới hạn và các mục chưa đạt |
 
 Spike mobile ở G0 chỉ kiểm tra tính khả thi môi trường; chức năng app hoàn chỉnh triển khai sau luồng backend/web theo phạm vi đã chọn.
+
+<a id="section-4"></a>
 
 ## 2. Công việc theo lát cắt có thể kiểm tra
 
@@ -37,13 +73,21 @@ Spike mobile ở G0 chỉ kiểm tra tính khả thi môi trường; chức năn
 
 Đây là backlog trong tài liệu, chưa tạo issue trên tracker. Khi triển khai, chia nhỏ thêm nếu một công việc không thể nghiệm thu trong một đợt làm việc rõ ràng.
 
+<a id="section-5"></a>
+
 ## 3. Các cổng quyết định
 
-- **Dữ liệu không đạt:** dừng việc kết luận chất lượng mô hình; trình phương án nguồn/địa bàn hoặc thay đổi phạm vi trước khi đổi mặt hàng/kỳ dự báo.
-- **Nguồn lịch sử đạt nhưng cập nhật không đạt:** tìm đường cập nhật có bằng chứng; không quảng bá dự báo hằng ngày bằng báo cáo tuần chưa công bố.
-- **Model không vượt baseline:** phân tích trên validation, xem dữ liệu/feature, đánh giá lại bằng quy trình hợp lệ; nếu vẫn không đạt, trạng thái chưa đủ cơ sở được giữ và phần AI chưa nghiệm thu.
-- **Chưa kiểm thử được iOS:** phần iOS còn chưa đạt, ghi điều kiện cần bổ sung; không dùng ảnh Android thay thế bằng chứng.
-- **Muốn thêm chức năng ngoài MVP:** ghi thay đổi phạm vi và tác động trước khi đưa vào backlog.
+
+| Điểm dừng | Hành động | Điều kiện tiếp tục |
+| --- | --- | --- |
+| Dữ liệu không đạt | Trình phương án nguồn/địa bàn hoặc thay đổi phạm vi | Có phương án được chấp thuận trước đổi mặt hàng/kỳ dự báo |
+| Lịch sử đạt, cập nhật không đạt | Kiểm chứng đường cập nhật | Có bằng chứng nguồn đáp ứng nhịp vận hành |
+| Model kém baseline | Phân tích validation; đánh giá lại hợp lệ | Qua gate mới bật cảnh báo; nếu không thì giữ chưa đủ cơ sở |
+| Chưa kiểm thử được iOS | Ghi rõ điều kiện còn thiếu | Có bằng chứng iOS thực, không dùng ảnh Android thay thế |
+| Thêm chức năng ngoài MVP | Ghi thay đổi phạm vi và tác động | Thống nhất thay đổi trước thêm backlog |
+
+
+<a id="section-6"></a>
 
 ## 4. Chiến lược kiểm thử
 
@@ -52,6 +96,8 @@ Kiểm thử đơn vị tập trung vào biên ngưỡng rủi ro, thời điể
 Kiểm thử AI dùng dữ liệu lịch sử thực với split theo thời gian; fixture tổng hợp chỉ kiểm tra hành vi phần mềm. Kiểm thử thủ công kiểm tra biểu đồ, nhãn nguồn/độ cũ, khả năng đọc trên màn hình nhỏ và thông báo lỗi.
 
 Lưu ma trận: mã FR/NFR → ca kiểm thử → nền tảng → kết quả → bằng chứng → lỗi còn mở. Khi model đổi hoặc nguồn đổi schema, chạy lại các kiểm tra bị ảnh hưởng.
+
+<a id="section-7"></a>
 
 ## 5. Rủi ro tiến độ
 
@@ -63,6 +109,8 @@ Lưu ma trận: mã FR/NFR → ca kiểm thử → nền tảng → kết quả 
 | Mô hình kém baseline | MAE không cải thiện | Giữ báo cáo trung thực, xem lại dữ liệu và tính khả thi |
 | App hai nền tảng tăng khối lượng | Build/cài đặt hoặc biểu đồ lỗi nền tảng | Spike sớm; quản trị chỉ trên web |
 | Cá nhân làm quá nhiều nhánh | Chức năng dang dở không nghiệm thu | Hoàn thành từng lát cắt, giữ ngoài phạm vi như đã chốt |
+
+<a id="section-8"></a>
 
 ## 6. Gói bàn giao dự kiến
 

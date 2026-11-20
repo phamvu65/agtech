@@ -1,12 +1,44 @@
 # AGTECH-01 — Bài toán và phạm vi
 
-Phiên bản 1.0 — 20/11/2026. Căn cứ: phạm vi Q1–Q29 đã được người thực hiện xác nhận. Tài liệu mô tả mục tiêu triển khai, không chứng nhận hệ thống hoặc mô hình đã hoạt động.
+**Điều hướng:** [Đọc nhanh](#section-1) · [1. Bối cảnh và vấn đề](#section-2) · [2. Người dùng và giá trị](#section-3) · [3. Mục tiêu và tiêu chí thành công](#section-4) · [4. Phạm vi MVP](#section-5) · [5. Giới hạn nghiệp vụ](#section-6) · [6. Ngoài phạm vi](#section-7) · [7. Ràng buộc và phụ thuộc](#section-8) · [8. Tài liệu liên quan](#section-9)
+
+Phiên bản 1.1 — 20/11/2026. Căn cứ: phạm vi Q1–Q29 đã được người thực hiện xác nhận. Tài liệu mô tả mục tiêu triển khai, không chứng nhận hệ thống hoặc mô hình đã hoạt động.
+
+<a id="section-1"></a>
+
+## Đọc nhanh
+
+| Nội dung | Tóm tắt |
+| --- | --- |
+| Người dùng chính | Cán bộ hợp tác xã |
+| Sản phẩm MVP | Web + Android + iOS, chung backend |
+| Thị trường | Một mặt hàng, một địa bàn; ưu tiên cà phê sau kiểm chứng |
+| Đầu ra AI | Dự báo 7 ngày lịch + rủi ro giá giảm |
+| Quyết định bán | Thuộc người dùng |
+
+> **Cách đọc trạng thái:** Đã chốt = được xác nhận; Đề xuất = phương án thiết kế; Cần kiểm chứng = chưa có bằng chứng đạt. Sơ đồ mô tả thiết kế mục tiêu, không chứng nhận chức năng đã triển khai.
+
+<a id="section-2"></a>
 
 ## 1. Bối cảnh và vấn đề
 
 Cán bộ hợp tác xã cần tổng hợp thông tin giá từ nhiều nguồn để lập kế hoạch tiêu thụ. Dữ liệu khác nhau về địa bàn, loại hàng, đơn vị và thời điểm công bố khiến việc so sánh khó khăn. Chỉ nhìn giá hiện tại chưa thể hiện được diễn biến gần đây hoặc tín hiệu cần chú ý.
 
 Đề tài xây dựng nền tảng web và app tập trung dữ liệu, dự báo giá ngắn hạn, đánh dấu bất thường và phân loại rủi ro giá giảm. Cán bộ hợp tác xã sử dụng thông tin để tự quyết định; hệ thống không ra quyết định bán thay người dùng.
+
+### Hành trình sử dụng
+
+```mermaid
+flowchart LR
+    A["Mở web hoặc app"] --> B["Xem giá và độ mới"]
+    B --> C{"Đủ cơ sở dự báo?"}
+    C -->|Có| D["Xem dự báo và rủi ro"]
+    C -->|Không| E["Đọc lý do và lịch sử"]
+    D --> F["Cán bộ tự quyết định tiêu thụ"]
+    E --> F
+```
+
+<a id="section-3"></a>
 
 ## 2. Người dùng và giá trị
 
@@ -15,7 +47,17 @@ Cán bộ hợp tác xã cần tổng hợp thông tin giá từ nhiều nguồn
 | Cán bộ hợp tác xã | Theo dõi giá, dự báo và diễn biến rủi ro tại địa bàn quan tâm | Có thông tin cùng nguồn, thời điểm và giới hạn sử dụng để tham khảo trước khi tiêu thụ |
 | Quản trị viên | Duy trì nguồn, kiểm tra dữ liệu và các lần chạy | Phát hiện dữ liệu lỗi hoặc tác vụ thất bại; truy vết được kết quả |
 
-Một tình huống điển hình: cán bộ mở web hoặc app, xem giá gần nhất và ngày quan sát, kiểm tra dự báo bảy ngày, đọc mức rủi ro cùng căn cứ, rồi xem lịch sử trước khi tự lập kế hoạch tiêu thụ. Nếu dữ liệu chưa đạt điều kiện, màn hình thể hiện trạng thái chưa đủ cơ sở.
+
+| Bước | Người dùng xem | Câu hỏi được trả lời |
+| --- | --- | --- |
+| 1 | Giá, địa bàn, chất lượng | Giá này áp dụng cho loại hàng và nơi nào? |
+| 2 | Nguồn và thời điểm | Dữ liệu còn phù hợp để tham khảo không? |
+| 3 | Dự báo hoặc lý do chưa đủ cơ sở | Có thể tham khảo xu hướng bảy ngày tới không? |
+| 4 | Rủi ro, bất thường và lịch sử | Tín hiệu nào cần chú ý? |
+| 5 | Tổng hợp thông tin | Tự lựa chọn kế hoạch tiêu thụ |
+
+
+<a id="section-4"></a>
 
 ## 3. Mục tiêu và tiêu chí thành công
 
@@ -26,6 +68,8 @@ Một tình huống điển hình: cán bộ mở web hoặc app, xem giá gần
 - Lưu dự báo, đánh giá rủi ro và thông báo để kiểm tra lại quá trình vận hành.
 
 Mức cải thiện MAE, độ dài lịch sử tối thiểu và ngưỡng cảnh báo chưa chốt. Chúng phải được xác lập qua bước kiểm chứng dữ liệu và đóng băng trước đánh giá cuối cùng. Hoàn thành phần mềm không đồng nghĩa mô hình đã đủ điều kiện cảnh báo.
+
+<a id="section-5"></a>
 
 ## 4. Phạm vi MVP
 
@@ -42,6 +86,8 @@ Mức cải thiện MAE, độ dài lịch sử tối thiểu và ngưỡng cả
 | Bất thường | Cờ trên dashboard; kiểm tra riêng, không tự chuyển thành HIGH |
 | Vận hành | Thu thập theo lịch khi nguồn hỗ trợ, nhập tệp có kiểm tra, theo dõi tác vụ |
 
+<a id="section-6"></a>
+
 ## 5. Giới hạn nghiệp vụ
 
 Rủi ro được phân loại từ mức giảm của giá dự báo thấp nhất trong kỳ so với giá quan sát mới nhất. Các mức này không phải xác suất giảm giá. Thiếu dữ liệu, dữ liệu quá cũ hoặc mô hình chưa đạt phải dẫn đến trạng thái chưa đủ cơ sở, không gán LOW.
@@ -50,15 +96,21 @@ Không suy ra quan hệ nhân quả từ tương quan. Giá công bố là giá 
 
 MVP cần mạng. Khi mất kết nối, cho thử lại và ghi rõ thời điểm dữ liệu còn hiển thị. App chưa có chế độ offline hay thông báo đẩy khi đóng.
 
+<a id="section-7"></a>
+
 ## 6. Ngoài phạm vi
 
 Dự báo sản lượng, SHAP, bản đồ, Kafka, email/SMS, push notification, so sánh nhiều địa bàn, quản lý kho/giao dịch và dữ liệu nội bộ riêng của từng hợp tác xã. Phát hành công khai lên Google Play/App Store là giai đoạn riêng. Chưa yêu cầu TimescaleDB.
+
+<a id="section-8"></a>
 
 ## 7. Ràng buộc và phụ thuộc
 
 Đồ án thực hiện cá nhân, thời gian linh hoạt. Hướng công nghệ đã chọn: Next.js, Python/FastAPI, PostgreSQL. Công nghệ app là đề xuất trong tài liệu thiết kế. Chưa có mẫu báo cáo hay tiêu chí chấm của trường.
 
 Phụ thuộc lớn nhất là chuỗi giá nội địa đủ liên tục, nhất quán và có thể sử dụng. Nếu khảo sát không đạt, phải trình phương án thay đổi trước khi đổi mặt hàng hoặc kỳ dự báo. Các điều kiện build, cài đặt và kiểm thử iOS/Android phải được kiểm chứng sớm.
+
+<a id="section-9"></a>
 
 ## 8. Tài liệu liên quan
 
