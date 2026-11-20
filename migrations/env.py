@@ -1,6 +1,7 @@
 from alembic import context
 from sqlalchemy import create_engine
 
+from src import price_models  # noqa: F401
 from src.config import Settings
 from src.database import Base
 
