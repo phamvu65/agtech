@@ -1,0 +1,11 @@
+{
+  "ai-log": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python -c \"import os,runpy,sys; p='scripts/log_antigravity.py'; sys.argv=[p,'--hook']; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\"",
+        "timeout": 15
+      }
+    ]
+  }
+}
