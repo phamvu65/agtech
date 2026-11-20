@@ -11,6 +11,7 @@ from src.config import Settings, get_settings
 from src.forecasts import router as forecasts_router
 from src.prices import router as prices_router
 from src.references import router as references_router
+from src.risk import router as risk_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -38,6 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(references_router)
     app.include_router(analysis_router)
     app.include_router(forecasts_router)
+    app.include_router(risk_router)
 
     @app.get("/health")
     async def health():

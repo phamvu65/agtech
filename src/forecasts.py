@@ -1,10 +1,11 @@
 """Immutable seven-calendar-day forecasts; operational publication remains gated."""
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import AwareDatetime, BaseModel, ConfigDict, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import JSON, DateTime, ForeignKey, String, select
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -60,6 +61,7 @@ def create_forecast(series_id: int, body: ForecastRequest, db: DB, admin: Admini
     payload = {
         "status": "unavailable",
         "operational_eligible": False,
+        "calendar_timezone": "UTC",
         "predictions": [],
         "reasons": ["Source/model acceptance and freshness policies are unverified."],
         "data_as_of": None,
@@ -142,6 +144,7 @@ def latest_forecast(series_id: int, db: DB, user: Authenticated):
             "id": None,
             "status": "unavailable",
             "operational_eligible": False,
+            "calendar_timezone": "UTC",
             "predictions": [],
             "reasons": ["No evaluated model/forecast is available."],
         }
@@ -171,4 +174,56 @@ def get_forecast(run_id: int, db: DB, user: Authenticated):
     run = db.get(ForecastRun, run_id)
     if not run:
         raise HTTPException(404, "Forecast not found")
+    return forecast_data(run)
+
+
+class FixtureForecastRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    snapshot_id: int
+    as_of: AwareDatetime
+    prices: list[Decimal] = Field(min_length=7, max_length=7)
+
+    @model_validator(mode="after")
+    def validate_values(self):
+        if self.as_of > datetime.now(UTC) or any(not value.is_finite() or value <= 0 for value in self.prices):
+            raise ValueError("Require historical origin and seven finite positive fixture prices")
+        return self
+
+
+@router.post("/admin/price-series/{series_id}/forecast-fixture", status_code=201)
+def fixture_forecast(series_id: int, body: FixtureForecastRequest, db: DB, admin: Administrator, request: Request):
+    series = db.get(PriceSeries, series_id)
+    snapshot = db.get(DataSnapshot, body.snapshot_id)
+    if not series or not snapshot:
+        raise HTTPException(404, "Series/snapshot not found")
+    if series.dataset_kind != "synthetic" or request.app.state.settings.app_env == "production":
+        raise HTTPException(409, "Manual fixture requires synthetic data outside production")
+    if snapshot.series_id != series_id:
+        raise HTTPException(409, "Snapshot belongs to another series")
+    known = [row for row in snapshot.payload["observations"] if available(row, body.as_of.astimezone(UTC))]
+    if not known:
+        raise HTTPException(409, "No observation available at fixture origin")
+    origin = body.as_of.astimezone(UTC).date()
+    payload = {
+        "status": "fixture",
+        "operational_eligible": False,
+        "calendar_timezone": "UTC",
+        "reasons": ["Manually specified synthetic forecast; not a trained/approved model."],
+        "predictions": [
+            {"date": (origin + timedelta(days=h)).isoformat(), "price": str(value)}
+            for h, value in enumerate(body.prices, start=1)
+        ],
+        "data_as_of": known[-1]["observed_on"],
+        "data_age_seconds": (body.as_of - datetime.fromisoformat(known[-1]["available_at"])).total_seconds(),
+        "current_price": known[-1]["price"],
+        "model_version": "manual_fixture_v1",
+        "snapshot_sha256": snapshot.sha256,
+        "snapshot_id": snapshot.id,
+        "historical_simulation": origin < datetime.now(UTC).date(),
+    }
+    run = ForecastRun(
+        series_id=series_id, created_at=datetime.now(UTC), as_of=body.as_of, mode="fixture", payload=payload
+    )
+    db.add(run)
+    db.commit()
     return forecast_data(run)

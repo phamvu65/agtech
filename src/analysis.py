@@ -64,7 +64,10 @@ def end_of_day(day):
 
 
 def available(row, at):
-    return date.fromisoformat(row["observed_on"]) <= at.date() and datetime.fromisoformat(row["available_at"]) <= at
+    return (
+        date.fromisoformat(row["observed_on"]) <= at.astimezone(UTC).date()
+        and datetime.fromisoformat(row["available_at"]) <= at
+    )
 
 
 def snapshot_data(snapshot):
