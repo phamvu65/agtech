@@ -55,6 +55,7 @@ out/
 *.pyc
 *.pyo
 
-# AI logs — tracked structure, ignored content
-.ai-log/*.jsonl
-.ai-log/archive/
+
+.pytest_cache/
+.ruff_cache/
+.expo/
