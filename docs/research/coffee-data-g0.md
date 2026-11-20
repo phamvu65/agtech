@@ -91,3 +91,16 @@ Robots là chỉ dẫn thu thập, **không phải giấy phép** tái sử dụ
 6. **Nhịp vận hành**: tìm đường cập nhật ngày được cho phép hoặc trình phương án điều chỉnh nếu chỉ có báo cáo tuần. Nhập tệp thủ công hỗ trợ hồi phục nhưng không chứng minh FR-03 thu thập tự động.
 
 World Bank/Open-Meteo không được kiểm chứng thêm trong đợt này; các kết luận sơ bộ trước đó không được nâng thành bằng chứng API đã chạy. Chúng không thay thế target giá thu mua nội địa hoặc tháo gỡ các blocker G0 trên.
+
+## Tái lập kiểm đếm từ checkout sạch
+
+Bổ sung ngày 20/11/2026: script `scripts/recheck_coffee_g0.py` thay thế phần kiểm đếm vốn chỉ có trong thư mục nghiên cứu ngoài repository. Script chỉ nhận đúng ba PDF theo SHA-256 ở trên, kiểm 17 hàng × 5 ô ngày trên trang bảng của từng PDF và dừng nếu nội dung thay đổi. Ngày quan sát vẫn phải đối chiếu thủ công với khoảng ngày **thị trường trong nước**; script không suy ngày công bố hay quyền dùng từ HTTP header.
+
+```powershell
+python -m pip install pypdf==6.6.0
+python scripts/recheck_coffee_g0.py --fetch
+# Chạy lại trên bản đã lưu, không gọi nguồn:
+python scripts/recheck_coffee_g0.py
+```
+
+Đã chạy lại bằng Python 3.14.0/pypdf 6.6.0 trên Windows: ba checksum trùng mẫu gốc, mỗi PDF 17 hàng/85 ô ngày, tổng 255 ô; ba tuần rời nhau chỉ có 15 ngày cho một địa bàn. Kết quả JSON lưu ở `data/research/recheck.json`, vẫn bị gitignore. `--fetch` chỉ tải hữu hạn ba URL đã nêu; không phải connector, lịch thu thập hay quyết định cấp phép. Các script nghiên cứu cũ và hiện vật HTML ngoài repository chưa được khôi phục; không tuyên bố script mới tái lập phần khảo sát HTML/robots hoặc thời điểm công bố gốc.
