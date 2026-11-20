@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 
 from src.auth import router as auth_router
 from src.config import Settings, get_settings
+from src.prices import router as prices_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -28,6 +29,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Content-Type", "Authorization"],
     )
     app.include_router(auth_router)
+    app.include_router(prices_router)
 
     @app.get("/health")
     async def health():

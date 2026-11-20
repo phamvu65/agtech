@@ -4,7 +4,7 @@ Nền tảng theo dõi thị trường nông sản, dự báo giá và hỗ tr�
 
 ## Trạng thái
 
-Repository có nền FastAPI/PostgreSQL, đăng nhập/phân quyền và web Next.js cấp/khóa tài khoản. Dữ liệu thị trường, dự báo và app native chưa triển khai. Xem [hướng dẫn chạy và kiểm thử](docs/operations/authentication.md).
+Repository có nền FastAPI/PostgreSQL, đăng nhập/phân quyền và web Next.js cấp/khóa tài khoản. Đã có nhập CSV có audit và dashboard lịch sử; chưa nạp nguồn thị trường được duyệt, chưa có dự báo hoặc app native được nghiệm thu. Xem [nhập giá và lịch sử](docs/operations/price-imports.md). Xem [hướng dẫn chạy và kiểm thử](docs/operations/authentication.md).
 
 ## Tài liệu
 

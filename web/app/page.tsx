@@ -2,20 +2,12 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
+import { api } from "./api-client";
+import PriceMarket from "./price-market";
+
 type Identity = { username: string; role: "admin" | "observer" };
 type Account = Identity & { id: number; active: boolean };
 type AccountPage = { items: Account[]; total: number };
-
-async function api<T>(path: string, method = "GET", body?: unknown): Promise<T> {
-  const response = await fetch(`/api/${path}`, { method, headers: { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store" });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(response.status === 401 ? "Phiên không hợp lệ hoặc tên đăng nhập/mật khẩu chưa đúng." :
-      typeof error.detail === "string" ? error.detail : "Dữ liệu chưa hợp lệ. Hãy kiểm tra lại.");
-  }
-  return response.status === 204 ? undefined as T : response.json();
-}
 
 export default function Home() {
   const [user, setUser] = useState<Identity | null>(null);
@@ -85,7 +77,7 @@ export default function Home() {
           </form></section> : <>
           <div className="toolbar"><h2>Tổng quan thị trường</h2><span className="status">Chưa đủ cơ sở dự báo</span><button className="quiet" onClick={refresh}>Làm mới</button></div>
           {error && <p className="error" role="alert">{error}</p>}
-          <section className="panel empty"><span className="tag">ĐANG KIỂM CHỨNG NGUỒN</span><h3>Chưa có dữ liệu giá đã kiểm chứng.</h3><p>Lịch sử giá và dự báo sẽ xuất hiện sau khi dữ liệu đáp ứng điều kiện sử dụng.<br/>Trạng thái này không mang nghĩa rủi ro thấp.</p></section>
+          <PriceMarket isAdmin={user.role === "admin"}/>
           {user.role === "admin" && <section className="admin"><div className="section-title"><span className="eyebrow">QUẢN TRỊ</span><h2>Tài khoản sử dụng</h2></div>
             <div className="admin-grid"><form className="panel" onSubmit={createAccount}><h3>Cấp tài khoản cán bộ</h3>
               <label>Tên đăng nhập mới<input name="username" autoComplete="off" pattern="[a-zA-Z0-9_.\-]+" required maxLength={80}/></label>
