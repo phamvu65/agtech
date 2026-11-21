@@ -32,4 +32,4 @@ cd android
 .\gradlew.bat :app:assembleRelease --no-daemon --console=plain --max-workers=2 -PreactNativeArchitectures=x86_64
 ```
 
-Windows đường dẫn sâu có thể cần map thư mục mobile sang một drive trống (`subst`) trước khi chạy Gradle. Chỉ giải phóng mapping của phiên sau khi hoàn tất. Release scaffold dùng signing debug cho artifact kiểm tra nội bộ, không phải bản phát hành store. App chưa được phát hành công khai.
+Windows đường dẫn sâu có thể cần map thư mục cha AGTECH sang một drive trống (`subst T: C:\Users\<user>\Desktop\AGTECH`), rồi chạy từ `T:\mobile\android`. Không map trực tiếp mobile vào gốc drive vì bộ dò package của Expo bỏ qua package tại gốc drive. Chỉ giải phóng mapping của phiên sau khi hoàn tất. Release scaffold dùng signing debug cho artifact kiểm tra nội bộ, không phải bản phát hành store. App chưa được phát hành công khai.

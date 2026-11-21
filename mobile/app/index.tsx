@@ -73,6 +73,7 @@ type Risk = {
   };
 };
 type Reference = {
+  dataset_kind: string;
   id: number;
   kind: string;
   period_start: string;
@@ -627,6 +628,9 @@ function Market({ series }: { series: Series }) {
             <Text>
               {r.variable}: {r.value} {r.unit}
             </Text>
+            {r.dataset_kind === "synthetic" && (
+              <Text style={styles.warning}>Tham khảo fixture tự tạo</Text>
+            )}
             <Text>
               {r.product} ·{" "}
               {r.latitude !== null
