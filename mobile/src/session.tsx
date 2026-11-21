@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import * as SecureStore from "expo-secure-store";
 import { ApiError, request } from "./api";
+import { useResume } from "./use-resume";
 
 type Identity = { username: string; role: string };
 type Session = { token: string; user: Identity };
@@ -22,33 +23,54 @@ type SessionContext = {
 };
 const Context = createContext<SessionContext | null>(null);
 const KEY = "agtech.session";
+let storageQueue: Promise<unknown> = Promise.resolve();
+function storage<T>(action: () => Promise<T>): Promise<T> {
+  const result = storageQueue.then(action, action);
+  storageQueue = result.catch(() => {});
+  return result;
+}
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const tokenRef = useRef<string | null>(null);
+  const epoch = useRef(0);
+  const authMutation = useRef(false);
+  const resumed = useResume();
   useEffect(() => {
+    if (authMutation.current) return;
     let active = true;
+    const version = ++epoch.current;
     async function restore() {
       try {
-        const token = await SecureStore.getItemAsync(KEY);
-        if (!active) return;
+        const token = await storage(() => SecureStore.getItemAsync(KEY));
+        if (!active || epoch.current !== version) return;
         tokenRef.current = token;
         if (token) {
           try {
             const user = await request<Identity>("/auth/me", token);
-            if (active) setSession({ token, user });
+            if (active && epoch.current === version)
+              setSession({ token, user });
           } catch (e) {
             if (e instanceof ApiError && e.status === 401) {
-              await SecureStore.deleteItemAsync(KEY);
-              tokenRef.current = null;
+              if (
+                !active ||
+                epoch.current !== version ||
+                tokenRef.current !== token
+              )
+                return;
+              await storage(() => SecureStore.deleteItemAsync(KEY));
+              if (epoch.current === version) {
+                tokenRef.current = null;
+                setSession(null);
+              }
             } else throw e;
           }
         }
-        if (active) setError("");
+        if (active && epoch.current === version) setError("");
       } catch (e) {
-        if (active)
+        if (active && epoch.current === version)
           setError(
             e instanceof Error ? e.message : "Không đọc được phiên đăng nhập.",
           );
@@ -60,7 +82,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [attempt]);
+  }, [attempt, resumed]);
   const call = useCallback(
     async <T,>(path: string, method = "GET", body?: unknown): Promise<T> => {
       const token = tokenRef.current;
@@ -75,7 +97,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         ) {
           tokenRef.current = null;
           setSession(null);
-          await SecureStore.deleteItemAsync(KEY);
+          await storage(() => SecureStore.deleteItemAsync(KEY));
           setError("Phiên đã hết hạn hoặc tài khoản đã bị khóa.");
         }
         throw e;
@@ -84,33 +106,55 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     [],
   );
   async function login(username: string, password: string) {
-    const result = await request<Identity & { access_token: string }>(
-      "/auth/login",
-      undefined,
-      "POST",
-      { username, password, transport: "bearer" },
-    );
+    if (authMutation.current) throw new Error("Đang xử lý phiên đăng nhập.");
+    authMutation.current = true;
+    const version = ++epoch.current;
     try {
-      await SecureStore.setItemAsync(KEY, result.access_token, {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      });
-    } catch (e) {
-      await request("/auth/logout", result.access_token, "POST").catch(
-        () => {},
+      const result = await request<Identity & { access_token: string }>(
+        "/auth/login",
+        undefined,
+        "POST",
+        { username, password, transport: "bearer" },
       );
-      throw e;
+      try {
+        if (version !== epoch.current)
+          throw new Error("Phiên đã thay đổi. Hãy thử lại.");
+        await storage(() =>
+          SecureStore.setItemAsync(KEY, result.access_token, {
+            keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+          }),
+        );
+      } catch (error) {
+        await request("/auth/logout", result.access_token, "POST").catch(
+          () => {},
+        );
+        throw error;
+      }
+      tokenRef.current = result.access_token;
+      setError("");
+      setSession({
+        token: result.access_token,
+        user: { username: result.username, role: result.role },
+      });
+    } finally {
+      authMutation.current = false;
     }
-    tokenRef.current = result.access_token;
-    setError("");
-    setSession({ token: result.access_token, user: result });
   }
   async function logout() {
-    await call("/auth/logout", "POST");
-    await SecureStore.deleteItemAsync(KEY);
-    tokenRef.current = null;
-    setSession(null);
-    setError("");
+    if (authMutation.current) throw new Error("Đang xử lý phiên đăng nhập.");
+    authMutation.current = true;
+    ++epoch.current;
+    try {
+      await call("/auth/logout", "POST");
+      await storage(() => SecureStore.deleteItemAsync(KEY));
+      tokenRef.current = null;
+      setSession(null);
+      setError("");
+    } finally {
+      authMutation.current = false;
+    }
   }
+
   return (
     <Context.Provider
       value={{

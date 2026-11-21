@@ -55,6 +55,7 @@ type Forecast = {
   predictions: { date: string; price: string }[];
 };
 type Risk = {
+  drop_pct?: string;
   id: number | null;
   as_of?: string;
   created_at?: string;
@@ -115,7 +116,7 @@ function Message({
       {loading && <ActivityIndicator accessibilityLabel="Đang tải" />}
       {at && (
         <Text style={styles.muted}>
-          Tải thành công gần nhất: {new Date(at).toLocaleString("vi-VN")}
+          Tải thành công gần nhất: {new Date(at).toISOString()} (UTC)
         </Text>
       )}
       {error && (
@@ -187,7 +188,11 @@ export default function Index() {
             {!!auth.error && (
               <>
                 <Text style={styles.error}>{auth.error}</Text>
-                <Button title="Thử lại phiên" onPress={auth.retry} />
+                <Button
+                  title="Thử lại phiên"
+                  disabled={busy}
+                  onPress={auth.retry}
+                />
               </>
             )}
             <TextInput
@@ -675,6 +680,14 @@ function RiskDetails({ item }: { item: Risk }) {
         Rủi ro: {item.level ? `${item.level} (thử nghiệm)` : "Chưa đủ cơ sở"}
       </Text>
       <Text>{item.reasons.join(" ")}</Text>
+      <Text>
+        Mức giảm dự báo tối đa so với giá quan sát gần nhất:{" "}
+        {item.drop_pct === undefined || item.drop_pct === null
+          ? "Chưa đủ cơ sở"
+          : `${Number(item.drop_pct).toFixed(2)}%`}
+        . Căn cứ: max(0, (P0 − min(F1…F7)) / P0 × 100), áp dụng quy tắc fixture
+        đã lưu.
+      </Text>
       <Text>
         Tạo: {item.created_at || "—"} · Mốc: {item.as_of || "—"} · Quy tắc:{" "}
         {item.policy_version || "Chưa kiểm chứng"}

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "./session";
+import { useResume } from "./use-resume";
 
 export function useRemote<T>(path: string | null) {
   const { call, session } = useSession();
   const key = `${session?.token || ""}:${path || ""}`;
   const generation = useRef(0);
+  const resumed = useResume();
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<{
     key: string;
@@ -33,7 +35,7 @@ export function useRemote<T>(path: string | null) {
     return () => {
       generation.current = id + 1;
     };
-  }, [path, key, attempt, call]);
+  }, [path, key, attempt, call, resumed]);
   const refresh = useCallback(() => {
     setState((old) => ({ ...old, loading: true, error: undefined }));
     setAttempt((v) => v + 1);
