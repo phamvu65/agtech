@@ -44,6 +44,8 @@ def test_followers_receive_only_risk_changes_and_private_read_state_is_isolated(
     assert client.get("/me/followings", headers=bearer).json()["total"] == 0
     assert client.delete(f"/me/followings/{series['id']}", headers=bearer).status_code == 204
     assert client.get("/me/followings").json()["total"] == 1
+    assert client.get("/me/followings", params={"series_id": series["id"]}).json()["total"] == 1
+    assert client.get("/me/followings", params={"series_id": series["id"] + 1000}).json()["total"] == 0
     assert client.delete(f"/me/followings/{series['id']}", headers=ORIGIN).status_code == 204
     assert client.get("/me/followings").json()["total"] == 0
 

@@ -1,0 +1,45 @@
+# Prepared template; requires DNS/host/secrets. Not a claim of public deployment.
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: agtech
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a private database password}
+      POSTGRES_DB: agtech
+    volumes: [postgres_data:/var/lib/postgresql]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U agtech -d agtech]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  backend:
+    build: ..
+    environment:
+      APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?Use postgres hostname and URL-encoded password}
+      CORS_ORIGINS: https://${AGTECH_DOMAIN:?Set the public hostname}
+    depends_on:
+      postgres: {condition: service_healthy}
+    command: [sh, -c, "python -m alembic upgrade head && exec uvicorn src.main:app --host 0.0.0.0 --port 8000"]
+    restart: unless-stopped
+  web:
+    build: ../web
+    environment:
+      API_BASE_URL: http://backend:8000
+      APP_ORIGIN: https://${AGTECH_DOMAIN:?Set the public hostname}
+      NODE_ENV: production
+    depends_on: [backend]
+    restart: unless-stopped
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment:
+      AGTECH_DOMAIN: ${AGTECH_DOMAIN:?Set the public hostname}
+    volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, caddy_data:/data, caddy_config:/config]
+    depends_on: [web, backend]
+    restart: unless-stopped
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
