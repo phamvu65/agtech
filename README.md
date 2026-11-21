@@ -4,7 +4,9 @@ Nền tảng theo dõi thị trường nông sản, dự báo giá và hỗ tr�
 
 ## Trạng thái
 
-Repository có nền FastAPI/PostgreSQL, đăng nhập/phân quyền và web Next.js cấp/khóa tài khoản. Đã có nhập CSV có audit và dashboard lịch sử; chưa nạp nguồn thị trường được duyệt, chưa có dự báo hoặc app native được nghiệm thu. Xem [nhập giá và lịch sử](docs/operations/price-imports.md). Có thêm [worker và màn hình tác vụ bằng fixture](docs/operations/collector-jobs.md); nguồn thật vẫn bị chặn. Xem [hướng dẫn chạy và kiểm thử](docs/operations/authentication.md).
+Đã triển khai API FastAPI/PostgreSQL, web Next.js và app TypeScript/React Native/Expo dùng chung backend. Có đăng nhập/phân quyền, nhập CSV và audit, lịch sử giá, tham khảo quốc tế/thời tiết, worker fixture, snapshot/backtest, dự báo/rủi ro thử nghiệm và hộp thư riêng. Dữ liệu tổng hợp chỉ kiểm tra hành vi; nguồn thật, chất lượng AI và ngưỡng vận hành chưa qua gate nên không công bố kết quả chính thức.
+
+Xem [chạy backend/web](docs/operations/authentication.md), [nhập giá](docs/operations/price-imports.md), [collector](docs/operations/collector-jobs.md), [tham khảo](docs/operations/reference-data.md), [phân tích](docs/operations/analysis.md), [mobile](docs/operations/mobile.md), [vận hành/restore](docs/operations/deployment.md) và [ma trận nghiệm thu](docs/operations/acceptance-matrix.md). Chưa nghiệm thu iOS native hoặc web triển khai công khai.
 
 ## Tài liệu
 
@@ -38,12 +40,14 @@ python -m pytest
 docker compose up --build
 ```
 
-Cổng mặc định 8000. Web Next.js và app di động sẽ dùng chung backend khi triển khai các giai đoạn kế tiếp.
+Cổng mặc định 8000. Web và app dùng chung backend. Template HTTPS tại `deploy/compose.production.yml` cần host/DNS/secret riêng; không có deployment công khai sẵn.
 
 ## Cấu trúc
 
 - `src/`: nền FastAPI và cấu hình ứng dụng.
-- `tests/`: kiểm thử health, cấu hình, CORS và việc loại bỏ API chatbot.
+- `tests/`: kiểm thử API nghiệp vụ với PostgreSQL test riêng.
+- `web/`: Next.js và Playwright.
+- `mobile/`: app Expo Router/React Native.
 - `docs/planning/`: bộ tài liệu AGTECH-01.
 - `docs/agents/`: cấu hình issue tracker, nhãn và tài liệu nghiệp vụ.
 - `CLAUDE.md`: hướng dẫn cho coding agent; giữ tên file đã có trong repository.

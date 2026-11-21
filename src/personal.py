@@ -147,10 +147,17 @@ def unfollow(series_id: int, db: DB, user: Authenticated):
 
 @router.get("/me/followings")
 def followings(
-    db: DB, user: Authenticated, response: Response, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100)
+    db: DB,
+    user: Authenticated,
+    response: Response,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    series_id: int | None = Query(None, ge=1),
 ):
     response.headers["Cache-Control"] = "no-store"
     query = select(Following).where(Following.user_id == user.id)
+    if series_id is not None:
+        query = query.where(Following.series_id == series_id)
     items = []
     for row in db.scalars(query.order_by(Following.id).offset(offset).limit(limit)):
         items.append({**series_data(db.get(PriceSeries, row.series_id)), "followed_at": row.created_at.isoformat()})

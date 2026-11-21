@@ -53,3 +53,36 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: web
       - run: python scripts/run_web_e2e.py
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+        working-directory: mobile
+      - run: npm run typecheck && npm run lint
+        working-directory: mobile
+      - name: Bundle JavaScript for Android and iOS (not native runtime evidence)
+        run: npx expo export --platform android --platform ios --max-workers 2
+        working-directory: mobile
+      - name: Generate Android native project
+        run: npx expo prebuild --platform android --no-install
+        working-directory: mobile
+      - name: Compile Android test release with bundled JavaScript
+        run: ./gradlew :app:assembleRelease --no-daemon --console=plain --max-workers=2 -PreactNativeArchitectures=x86_64
+        working-directory: mobile/android
+        env:
+          NODE_ENV: production
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-internal-test-apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
