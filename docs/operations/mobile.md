@@ -20,7 +20,7 @@ Dashboard hiển thị lịch sử giá và khoảng thiếu, nguồn/công bố
 
 ## Bằng chứng và giới hạn
 
-TypeScript và Expo lint đã đạt. Android native release đang được kiểm chứng riêng; kết quả artifact và runtime sẽ ghi ở phần nghiệm thu cuối. Export/bundle JavaScript không thay cho native build/runtime. Không có Mac/Xcode hoặc EAS đã xác thực/thiết bị iOS: chưa có iOS native build/runtime, không đánh dấu đạt #14.
+TypeScript, Expo lint và JavaScript bundle cho Android/iOS đã đạt. Build Android native release và artifact APK nội bộ được theo dõi tại [PR #23 / CI](https://github.com/phamvu65/agtech/pull/23/checks). Kết quả build không thay cho hành trình runtime; ghi trạng thái và hash artifact trong Evidence của PR/ticket. Export/bundle JavaScript không thay cho native build/runtime. Không có Mac/Xcode hoặc EAS đã xác thực/thiết bị iOS: chưa có iOS native build/runtime, không đánh dấu đạt #14.
 
 Expo tự sinh `android/ios` (gitignored). Cấu hình plugin tái lập trong `app.json`; `with-short-cmake-paths` đặt giới hạn object path cho CMake/Ninja trên Windows. App dùng native Stack, không dùng Reanimated/Worklets; hai peer tùy chọn không autolink, tránh biên dịch native không sử dụng. [Expo autolinking](https://docs.expo.dev/modules/autolinking/) mô tả cấu hình exclude. Không sửa `node_modules` để làm bằng chứng build.
 

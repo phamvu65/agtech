@@ -27,7 +27,7 @@ Phạm vi tổng hợp: phần mềm dùng fixture theo xác nhận của ngư�
 | 19 | private inbox/read foreign-user 404; web read | API/web đạt fixture | Native read-state journey còn thiếu |
 | 20 | web forced-source failure + retry; mobile timeout | API/web lỗi/khôi phục đạt; mobile có code | Native mất mạng chưa xác minh |
 | 21 | mobile useRemote last-success timestamp | Mobile có code | Chưa kiểm tra trên thiết bị |
-| 22 | native build/runtime evidence | Chưa đủ hai nền tảng | iOS không có môi trường; Android đang xác minh |
+| 22 | native build/runtime evidence | Chưa đủ hai nền tảng | iOS không có môi trường; Android build/artifact theo PR23, runtime chưa đủ |
 | 23 | `test_auth.py`, auth admin browser journey | API/web đạt | Không có admin UI mobile |
 | 24 | `test_collectors.py`, collectors web tests | Scheduler/worker fixture đạt | Nguồn thật no-go |
 | 25 | `test_prices.py`, CSV upload journey | API/web đạt | — |
