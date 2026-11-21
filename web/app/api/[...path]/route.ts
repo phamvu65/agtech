@@ -3,7 +3,19 @@ import { NextRequest } from "next/server";
 // Same-origin server proxy: session cookies never need to be read by browser JavaScript.
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const path = (await context.params).path.join("/");
-  if (!/^(auth\/(login|logout|me)|admin\/users(?:\/\d+)?|price-series(?:\/\d+\/(?:history|references))?|admin\/price-series(?:\/\d+\/(?:imports|reference-imports|reference-fixture))?|admin\/imports\/\d+(?:\/file)?|admin\/reference-imports\/\d+(?:\/file)?|admin\/collector-sources(?:\/\d+(?:\/runs)?)?|admin\/collector-jobs(?:\/\d+(?:\/raw)?)?)$/.test(path)) {
+  const allowed = [
+    /^auth\/(login|logout|me)$/,
+    /^admin\/users(?:\/\d+)?$/,
+    /^price-series(?:\/\d+\/(?:history|references|forecasts(?:\/latest)?|risk(?:\/latest)?))?$/,
+    /^admin\/price-series(?:\/\d+\/(?:imports|reference-imports|reference-fixture|snapshots|forecasts|forecast-fixture|risk-policies))?$/,
+    /^admin\/(?:imports|reference-imports)\/\d+(?:\/file)?$/,
+    /^admin\/collector-sources(?:\/\d+(?:\/runs)?)?$/,
+    /^admin\/collector-jobs(?:\/\d+(?:\/raw)?)?$/,
+    /^admin\/(?:backtests(?:\/\d+)?|snapshots\/\d+|risk-assessments|risk-validation(?:\/\d+)?|risk-policies\/\d+)$/,
+    /^forecasts\/\d+$/,
+    /^me\/(?:followings|notifications)(?:\/\d+)?$/,
+  ];
+  if (!allowed.some(pattern => pattern.test(path))) {
     return Response.json({ detail: "Not found" }, { status: 404 });
   }
   const origin = request.headers.get("origin");
@@ -11,6 +23,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     return Response.json({ detail: "Origin is not allowed" }, { status: 403 });
   }
   const csvUpload = /^admin\/price-series\/\d+\/imports$/.test(path);
+  const rawUpload = csvUpload || /^admin\/price-series\/\d+\/reference-imports$/.test(path);
   const headers = new Headers({ "Content-Type": csvUpload ? "text/csv" : "application/json" });
   if (origin) headers.set("Origin", origin);
   const cookie = request.headers.get("cookie");
@@ -30,7 +43,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       }
       const bytes = new Uint8Array(length); let offset = 0;
       for (const chunk of chunks) {bytes.set(chunk, offset); offset += chunk.length;}
-      body = csvUpload ? bytes : new TextDecoder().decode(bytes);
+      body = rawUpload ? bytes : new TextDecoder().decode(bytes);
       if (path === "auth/login") {
         try { body = JSON.stringify({ ...JSON.parse(body as string), transport: "cookie" }); }
         catch { return Response.json({ detail: "Invalid JSON" }, { status: 400 }); }
@@ -50,4 +63,4 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 }
 
-export { proxy as GET, proxy as POST, proxy as PATCH };
+export { proxy as GET, proxy as POST, proxy as PATCH, proxy as DELETE };
