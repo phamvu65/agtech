@@ -1933,3 +1933,43 @@
     font-size: 11px;
   }
 }
+@media (max-width: 760px) {
+  .variantB .appHeader nav {
+    display: none;
+  }
+  .switcher {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .switcher .variantControl {
+    grid-column: 1/-1;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    gap: 10px;
+  }
+  .switcher .variantControl > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .switcher label {
+    width: 100%;
+    min-width: 0;
+    font-size: 10px;
+  }
+  .switcher select {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 38px;
+    font-size: 12px;
+  }
+  .switcher .flowButton {
+    display: none;
+  }
+  .panelHead {
+    flex-wrap: wrap;
+  }
+}

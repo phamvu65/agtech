@@ -47,3 +47,9 @@ Prototype chỉ minh họa màn hình/bước; không thay các API và tính n�
 Đã chạy tra cứu UI UX Pro Max cho analytics dashboard, agriculture palette, biểu đồ time-series và Next.js navigation. Kết quả design-system tự động gợi ý phần landing "Enterprise Gateway / Contact Sales" không phù hợp với công cụ cán bộ, nên không áp dụng phần đó. Áp dụng product pattern Analytics Dashboard, phong cách dữ liệu rõ ràng, xanh nông nghiệp và màu cảnh báo hổ phách; điều chỉnh typography theo khả năng đọc tiếng Việt. Search chart gợi ý confidence band nhưng không áp dụng vì spec chưa có hiệu chuẩn. Yêu cầu nghiệp vụ và bằng chứng luôn ưu tiên hơn gợi ý của skill.
 
 Sau khi người dùng chọn cấu trúc, mới đưa phương án vào web thật, nối API, giữ phân quyền và bổ sung kiểm thử E2E theo các luồng đã chốt. Prototype không được dùng làm bằng chứng chức năng production.
+
+## Kiểm tra bản mẫu
+
+TypeScript và production build đạt. Đã bấm kiểm tra luồng theo dõi → thông báo → đánh giá lưu #17, mất mạng không đánh dấu đọc thành công, tình huống trống không giữ bảng giá/dự báo, hết phiên quay về đăng nhập, nhập CSV giả lập có dòng lỗi/trùng/xung đột, và chọn được mọi trang quản trị trên màn hình 375px. Đã xem phương án A/B/C; không có tràn ngang toàn trang ở 375px trong các màn hình đã kiểm tra. Đây là kiểm tra bản mẫu, chưa phải E2E của giao diện thật.
+
+Review độc lập hai trục đã sửa 2 finding Standards (đường dẫn màn hình không hợp lệ; điều hướng quản trị mobile) và 3 finding Spec (đánh giá lưu riêng; trạng thái rỗng; đối chiếu nhập giá). Review lại không còn finding bắt buộc trong phần sửa. Chưa chọn phương án cuối; chưa xác nhận luồng này đã được người dùng duyệt.
