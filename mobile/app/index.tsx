@@ -231,7 +231,13 @@ export default function Index() {
   );
 }
 function Workspace() {
-  const { session, call, logout } = useSession();
+  const {
+    session,
+    call,
+    logout,
+    error: sessionError,
+    retry: retrySession,
+  } = useSession();
   const series = useRemote<Series[]>("/price-series");
   const [followOffset, setFollowOffset] = useState(0);
   const follows = useRemote<{ items: Series[]; total: number }>(
@@ -274,6 +280,18 @@ function Workspace() {
           onPress={() => void act(logout, () => {})}
         />
       </View>
+      {!!sessionError && (
+        <View>
+          <Text style={styles.error} accessibilityRole="alert">
+            {sessionError}
+          </Text>
+          <Button
+            title="Kiểm tra lại phiên"
+            disabled={busy}
+            onPress={retrySession}
+          />
+        </View>
+      )}
       {!!actionError && (
         <Text style={styles.error} accessibilityRole="alert">
           {actionError}

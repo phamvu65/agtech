@@ -50,7 +50,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         if (token) {
           try {
             const user = await request<Identity>("/auth/me", token);
-            if (active && epoch.current === version)
+            if (
+              active &&
+              epoch.current === version &&
+              tokenRef.current === token
+            )
               setSession({ token, user });
           } catch (e) {
             if (e instanceof ApiError && e.status === 401) {
@@ -95,6 +99,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           e.status === 401 &&
           tokenRef.current === token
         ) {
+          ++epoch.current;
           tokenRef.current = null;
           setSession(null);
           await storage(() => SecureStore.deleteItemAsync(KEY));
