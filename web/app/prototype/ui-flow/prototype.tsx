@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import s from "./prototype.module.css";
 
 const screens = {
+  assessment: "Đánh giá đã lưu",
   login: "Đăng nhập",
   overview: "Tổng quan",
   market: "Thị trường",
@@ -192,8 +193,9 @@ function Prototype() {
     : "A";
   const role = query.get("role") === "admin" ? "admin" : "observer";
   const requested = query.get("screen") || "overview";
-  const screen: Screen =
-    requested in screens ? (requested as Screen) : "overview";
+  const screen: Screen = Object.hasOwn(screens, requested)
+    ? (requested as Screen)
+    : "overview";
   const [mode, setMode] = useState<Mode>("fixture"),
     [following, setFollowing] = useState(false),
     [read, setRead] = useState(false);
@@ -211,7 +213,7 @@ function Prototype() {
     setToast("");
     setDetail(false);
     router[replace ? "replace" : "push"](`${pathname}?${params}`, {
-      scroll: false,
+      scroll: !replace,
     });
   }
   function nav(next: Screen) {
@@ -536,7 +538,15 @@ function Prototype() {
           </div>
           {mode === "empty" ? empty() : <Chart forecast={forecast} />}
         </section>
-        {forecast ? (
+        {mode === "empty" ? (
+          <section className={s.panel}>
+            <h2>Chưa có kết quả trong tình huống này</h2>
+            <p>
+              Giá và dự báo được giữ trống. Chọn dữ liệu minh họa để xem bố cục
+              có số liệu.
+            </p>
+          </section>
+        ) : forecast ? (
           <div className={s.twoCols}>
             <section className={s.panel}>
               <h2>Bảy ngày kế tiếp</h2>
@@ -681,7 +691,7 @@ function Prototype() {
                 và kết quả cũ; chưa phải cảnh báo thị trường thực.
               </p>
               <p className={s.meta}>
-                Mốc đánh giá minh họa: 21/11/2026 · 09:00 UTC+7
+                Mốc đánh giá minh họa: 18/11/2026 · 09:00 UTC+7
               </p>
               <div className={s.row}>
                 <button
@@ -692,7 +702,7 @@ function Prototype() {
                       return;
                     }
                     setRead(true);
-                    nav("forecast");
+                    route({ screen: "assessment", assessment: "17" });
                   }}
                 >
                   Xem đánh giá liên quan
@@ -717,19 +727,126 @@ function Prototype() {
       </section>
     );
   }
+  function savedAssessment() {
+    return (
+      <>
+        <button className={s.textButton} onClick={() => nav("inbox")}>
+          ← Quay lại thông báo
+        </button>
+        <section className={s.panel}>
+          <div className={s.panelHead}>
+            <div>
+              <h2>Đánh giá đã lưu #17</h2>
+              <p>
+                Bản ghi gắn với thông báo ngày 18/11/2026 · 09:00 UTC+7. Không
+                chuyển sang dự báo mới nhất.
+              </p>
+            </div>
+            <Tag tone="amber">BẢN LƯU MINH HỌA</Tag>
+          </div>
+          <div className={s.twoCols}>
+            <div>
+              <h3>Cà phê nhân / Địa bàn minh họa</h3>
+              <p>
+                Forecast #12 · Snapshot #6 · Quy tắc fixture chưa nghiệm thu
+              </p>
+              <p>Tạo: 18/11/2026 · 08:00 UTC+7</p>
+              <p>Mốc dự báo: 17/11/2026 (UTC) · Dữ liệu đến: 17/11/2026</p>
+              <p>Giá quan sát ở mốc: 96.365 VNĐ/kg · Dữ liệu tự tạo</p>
+            </div>
+            <div>
+              <Tag>Chưa đủ cơ sở phân loại vận hành</Tag>
+              <p>
+                Kết quả này giữ nguyên phiên bản và đầu vào của lần đánh giá.
+                Mẫu thông báo chỉ phục vụ duyệt UI flow.
+              </p>
+              <button onClick={() => nav("forecast")}>
+                Xem dự báo hiện tại (bản khác)
+              </button>
+            </div>
+          </div>
+          <div className={s.dataTable}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Ngày của bản lưu (UTC)</th>
+                  <th>Dự báo fixture (VNĐ/kg)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[94713, 94804, 94894, 94985, 95075, 95166, 95256].map(
+                  (v, i) => (
+                    <tr key={v}>
+                      <td>{18 + i}/11/2026</td>
+                      <td>{v.toLocaleString("vi-VN")}</td>
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </>
+    );
+  }
+  function importRows() {
+    return (
+      <div className={s.dataTable}>
+        <table>
+          <thead>
+            <tr>
+              <th>Dòng</th>
+              <th>Trạng thái</th>
+              <th>Ngày / giá</th>
+              <th>Đối chiếu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ["2", "Hợp lệ", "20/11/2026 · 96.281", "Đủ đơn vị và ngày nguồn"],
+              [
+                "3",
+                "Lỗi",
+                "21/11/2026 · abc",
+                "Giá không phải số; cách ly dòng",
+              ],
+              [
+                "4",
+                "Trùng",
+                "20/11/2026 · 96.281",
+                "Giữ quan sát cũ, không nhập lần hai",
+              ],
+              [
+                "5",
+                "Xung đột",
+                "20/11/2026 · 99.000",
+                "Giá khác bản cũ; không ghi đè",
+              ],
+            ].map((row) => (
+              <tr key={row[0]}>
+                {row.map((cell) => (
+                  <td key={cell}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
   function admin() {
     if (page === "imports")
       return (
         <section className={s.panel}>
           <h2>Nhập giá theo từng bước</h2>
           <p>
-            Luồng thiết kế: chọn chuỗi → chọn tệp → xem kiểm tra → đối chiếu kết
-            quả. Các nút dưới chỉ giả lập bản mẫu.
+            Bản mẫu: chọn chuỗi → kiểm tra từng dòng → kết quả nhập có truy vết.
+            Không gửi tệp hoặc ghi database.
           </p>
           <ol className={s.importSteps}>
             {["Chọn chuỗi & tệp", "Kiểm tra dữ liệu", "Kết quả lần nhập"].map(
               (v, i) => (
-                <li className={i === importStep ? s.currentStep : ""} key={v}>
+                <li key={v} className={i === importStep ? s.currentStep : ""}>
                   {i + 1}. {v}
                 </li>
               ),
@@ -740,68 +857,87 @@ function Prototype() {
               <Icon name="imports" />
               <h3>Cà phê nhân / Chuỗi fixture</h3>
               <p>
-                Chỉ nhập nguồn có căn cứ sử dụng. CSV giữ giá, đơn vị, ngày và
-                nguồn theo mẫu.
+                Chỉ nhập nguồn có căn cứ sử dụng. Dữ liệu dưới tự tạo để xem
+                luồng xử lý lỗi.
               </p>
               <button className={s.primary} onClick={() => setImportStep(1)}>
                 Chọn tệp minh họa
               </button>
             </div>
-          ) : importStep === 1 ? (
+          ) : (
             <>
-              <div className={s.stats}>
-                <div>
-                  <span>Hợp lệ</span>
-                  <strong>87</strong>
+              {importStep === 2 && (
+                <div className={s.callout}>
+                  <Icon name="check" />
+                  <div>
+                    <strong>Kết quả minh họa lần nhập #42</strong>
+                    <p>
+                      Tệp: gia-minh-hoa.csv · Người nhập: admin-demo ·
+                      21/11/2026 · 09:00 UTC+7
+                    </p>
+                    <p>
+                      Audit/bản gốc và SHA-256 nằm trong chi tiết của lần nhập
+                      thật; bản mẫu không tạo file hoặc hash giả.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <span>Ngày thiếu</span>
-                  <strong>3</strong>
-                </div>
-                <div>
-                  <span>Xung đột</span>
-                  <strong>0</strong>
-                </div>
+              )}
+              <div className={s.importCounts}>
+                {[
+                  ["Hợp lệ", "84"],
+                  ["Lỗi", "1"],
+                  ["Trùng", "1"],
+                  ["Xung đột", "1"],
+                ].map(([label, count]) => (
+                  <div key={label}>
+                    <span>{label}</span>
+                    <strong>{count}</strong>
+                  </div>
+                ))}
               </div>
               <p>
-                Giữ nguyên ngày thiếu. Lỗi/trùng/xung đột được phân biệt; giá cũ
-                không bị ghi đè.
+                87 dòng minh họa. Chỉ 84 dòng hợp lệ được chấp nhận; lỗi được
+                cách ly, trùng được bỏ qua, xung đột giữ đối chiếu. Ngày thiếu
+                không được điền giá.
               </p>
+              {importRows()}
               <div className={s.row}>
-                <button onClick={() => setImportStep(0)}>Quay lại</button>
-                <button
-                  className={s.primary}
-                  onClick={() => {
-                    if (mode === "offline") {
-                      setToast(
-                        "Chưa thể gửi khi mất mạng; không báo nhập thành công.",
-                      );
-                      return;
-                    }
-                    setImportStep(2);
-                  }}
-                >
-                  Giả lập xác nhận nhập
-                </button>
+                {importStep === 1 ? (
+                  <>
+                    <button onClick={() => setImportStep(0)}>Quay lại</button>
+                    <button
+                      className={s.primary}
+                      onClick={() => {
+                        if (mode === "offline") {
+                          setToast(
+                            "Chưa thể gửi khi mất mạng; không báo nhập thành công.",
+                          );
+                          return;
+                        }
+                        setImportStep(2);
+                      }}
+                    >
+                      Giả lập nhập các dòng hợp lệ
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => setImportStep(1)}>
+                      Xem lại kiểm tra
+                    </button>
+                    <button
+                      className={s.primary}
+                      onClick={() => {
+                        setImportStep(0);
+                        nav("market");
+                      }}
+                    >
+                      Xem lịch sử chuỗi
+                    </button>
+                  </>
+                )}
               </div>
             </>
-          ) : (
-            <div className={s.empty}>
-              <Icon name="check" />
-              <h3>Luồng kết quả đã được minh họa</h3>
-              <p>
-                Ở bản thật: chỉ báo thành công sau response server; lưu bản gốc,
-                hash, người nhập và chi tiết từng dòng.
-              </p>
-              <button
-                onClick={() => {
-                  setImportStep(0);
-                  nav("market");
-                }}
-              >
-                Xem lịch sử chuỗi
-              </button>
-            </div>
           )}
         </section>
       );
@@ -1074,7 +1210,38 @@ function Prototype() {
               <span className={s.avatar}>HT</span>
             </div>
           </div>
-          {page!=="login"&&<nav className={s.mobileNav} aria-label="Điều hướng màn hình nhỏ">{userPages.map(screenLink)}{role==="admin"&&<button onClick={()=>nav("sources")}><Icon name="sources"/><span>Quản trị</span></button>}</nav>}
+          {page !== "login" && (
+            <nav className={s.mobileNav} aria-label="Điều hướng màn hình nhỏ">
+              {userPages.map(screenLink)}
+              {role === "admin" && (
+                <button onClick={() => nav("sources")}>
+                  <Icon name="sources" />
+                  <span>Quản trị</span>
+                </button>
+              )}
+            </nav>
+          )}
+          {role === "admin" && page !== "login" && (
+            <div className={s.mobileAdmin}>
+              <label>
+                Khu vực quản trị
+                <select
+                  aria-label="Khu vực quản trị"
+                  value={adminPages.includes(page) ? page : ""}
+                  onChange={(e) => nav(e.target.value as Screen)}
+                >
+                  <option value="" disabled>
+                    Chọn công việc
+                  </option>
+                  {adminPages.map((key) => (
+                    <option key={key} value={key}>
+                      {screens[key]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <main className={s.main} id="flow-main">
             <div
               className={`${s.notice} ${mode === "offline" ? s.offline : ""}`}
@@ -1184,11 +1351,13 @@ function Prototype() {
                 </div>
                 {page === "overview"
                   ? overview()
-                  : page === "market" || page === "forecast"
-                    ? market(page === "forecast")
-                    : page === "following" || page === "inbox"
-                      ? personal()
-                      : admin()}
+                  : page === "assessment"
+                    ? savedAssessment()
+                    : page === "market" || page === "forecast"
+                      ? market(page === "forecast")
+                      : page === "following" || page === "inbox"
+                        ? personal()
+                        : admin()}
               </>
             )}
             {toast && (
@@ -1235,6 +1404,7 @@ function Prototype() {
         <label>
           Vai trò
           <select
+            aria-label="Vai trò"
             value={role}
             onChange={(e) =>
               route({
@@ -1250,6 +1420,7 @@ function Prototype() {
         <label>
           Tình huống
           <select
+            aria-label="Tình huống"
             value={mode}
             onChange={(e) => {
               setMode(e.target.value as Mode);

@@ -1823,15 +1823,113 @@
     transition: none;
   }
 }
-.mobileNav { display: none; }
-.root .tag, .root .legend, .root .footer, .root .sourceMini span, .root .sourceMini strong, .root .stats p, .root .followRow p, .root .panelFoot > span, .root .sidebarFoot small { font-size: 11px; }
-.chart text { font-size: 18px; }
-@media(max-width:760px) {
-  .mobileNav { display:flex; position:sticky; top:0; z-index:5; background:#fcfdfb; border-bottom:1px solid var(--p-line); padding:5px 10px; gap:3px; }
-  .mobileNav button { flex:1; padding:7px 4px; border:0; background:transparent; font-size:10px; flex-direction:column; min-height:53px; gap:3px; position:relative; }
-  .mobileNav .active { color:var(--p-green); background:#e6efe3; }
-  .mobileNav .count { position:absolute; top:2px; right:12px; min-width:15px; font-size:9px; }
-  .mobileNav svg { width:17px; height:17px; }
-  .chart text { font-size:32px; }
-  .root .flowNodes small { font-size:11px; }
+.mobileNav {
+  display: none;
+}
+.mobileAdmin {
+  display: none;
+}
+.importCounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 22px 0;
+}
+.importCounts > div {
+  padding: 18px;
+  border: 1px solid var(--p-line);
+  border-radius: 8px;
+  background: #f7faf5;
+}
+.importCounts span {
+  display: block;
+  color: var(--p-muted);
+  font-size: 12px;
+}
+.importCounts strong {
+  font-size: 26px;
+  font-weight: 600;
+}
+.root .tag,
+.root .legend,
+.root .footer,
+.root .sourceMini span,
+.root .sourceMini strong,
+.root .stats p,
+.root .followRow p,
+.root .panelFoot > span,
+.root .sidebarFoot small {
+  font-size: 11px;
+}
+.chart text {
+  font-size: 18px;
+}
+@media (max-width: 760px) {
+  .mobileAdmin {
+    display: block;
+    padding: 10px 16px;
+    background: #fcfdfb;
+    border-bottom: 1px solid var(--p-line);
+  }
+  .mobileAdmin label {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11px;
+  }
+  .mobileAdmin select {
+    max-width: 65%;
+    padding: 10px;
+    border: 1px solid var(--p-line);
+    border-radius: 6px;
+    background: white;
+    font-size: 13px;
+    color: var(--p-dark);
+  }
+  .importCounts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mobileNav {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #fcfdfb;
+    border-bottom: 1px solid var(--p-line);
+    padding: 5px 10px;
+    gap: 3px;
+  }
+  .mobileNav button {
+    flex: 1;
+    padding: 7px 4px;
+    border: 0;
+    background: transparent;
+    font-size: 10px;
+    flex-direction: column;
+    min-height: 53px;
+    gap: 3px;
+    position: relative;
+  }
+  .mobileNav .active {
+    color: var(--p-green);
+    background: #e6efe3;
+  }
+  .mobileNav .count {
+    position: absolute;
+    top: 2px;
+    right: 12px;
+    min-width: 15px;
+    font-size: 9px;
+  }
+  .mobileNav svg {
+    width: 17px;
+    height: 17px;
+  }
+  .chart text {
+    font-size: 32px;
+  }
+  .root .flowNodes small {
+    font-size: 11px;
+  }
 }
